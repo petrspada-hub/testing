@@ -1,5 +1,7 @@
 
 (() => {
+  "use strict";
+
 /* =========================
    KONFIGURACE SUPABASE
    ========================= */
@@ -134,7 +136,9 @@ function render(){
   if(cut === null){
     x.drawImage(img, ix, iy, iw, ih);
   } else {
-    const srcH = img.naturalHeight; const scale = ih / srcH; const realCut = Math.round(cut / scale);
+    const srcH = img.naturalHeight;
+    const scale = ih / srcH;
+    const realCut = Math.round(cut / scale);
     x.drawImage(img, 0, realCut, img.naturalWidth, srcH - realCut, ix, iy + cut, iw, ih - cut);
   }
   if(cut === null){
@@ -218,15 +222,20 @@ function saveBest(){
    ========================= */
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// Pozn.: aby to bylo kompatibilní bez agregací, stáhneme top řádky a na klientu je zjednodušíme na unikátní UID.
 async function fetchTop3(difficulty) {
-  // MAX(score) pro obtížnost; seřadit desc; limit 3
-  const q = `/rest/v1/scores?difficulty=eq.${difficulty}&select=uid,nick,score_max:score.max&order=score_max.desc&limit=3`;
-  return sbGet(q);
+  const q = `/rest/v1/scores?difficulty=eq.${difficulty}&select=uid,nick,score&order=score.desc&limit=100`;
+  const rows = await sbGet(q);
+  const byUid = new Map();
+  for (const r of rows) {
+    if (!byUid.has(r.uid)) byUid.set(r.uid, r); // první výskyt = nejvyšší score díky order=desc
+  }
+  return Array.from(byUid.values()).slice(0,3);
 }
 async function fetchMyBest(difficulty) {
-  const q = `/rest/v1/scores?uid=eq.${UID}&difficulty=eq.${difficulty}&select=score_max:score.max`;
+  const q = `/rest/v1/scores?uid=eq.${UID}&difficulty=eq.${difficulty}&select=score&order=score.desc&limit=1`;
   const d = await sbGet(q);
-  return d[0]?.score_max ?? null;
+  return d[0]?.score ?? null;
 }
 async function updateNickEverywhere(newNick) {
   // přepíše nick u všech záznamů daného UID (skóre zůstávají)
@@ -234,7 +243,7 @@ async function updateNickEverywhere(newNick) {
 }
 
 function renderList(listEl, rows) {
-  listEl.innerHTML = rows.map(r => `<li>${escapeHtml(r.nick)} — ${r.score_max}</li>`).join("") || "<li>—</li>";
+  listEl.innerHTML = rows.map(r => `<li>${escapeHtml(r.nick)} — ${r.score}</li>`).join("") || "<li>—</li>";
 }
 function renderMe(meEl, top3Rows, myBest) {
   const iAmInTop3 = top3Rows.some(r => r.uid === UID);
@@ -276,4 +285,4 @@ document.getElementById("saveNick")?.addEventListener("click", async () => {
   catch(e){ console.error(e); alert("Nepodařilo se uložit jméno."); }
 });
 
-})();
+})(); //
