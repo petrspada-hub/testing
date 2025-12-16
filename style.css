@@ -1,5 +1,5 @@
 
-/* ===== ZÁKLAD (tvé původní nastavení, ponecháváme) ===== */
+/* Základ stránky */
 html, body {
   background: #1e1e1e;
   margin: 0;
@@ -10,6 +10,12 @@ html, body {
   font: 14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
+/* Kontejner, aby se overlay mohl pozicovat vůči němu */
+.wrap {
+  position: relative;     /* DŮLEŽITÉ */
+  width: 700px;
+}
+
 /* Canvas hry */
 canvas {
   border: 1px solid #333;
@@ -18,13 +24,7 @@ canvas {
   background: #1e1e1e;
 }
 
-/* ===== WRAPPER pro overlay (panel + tlačítko) ===== */
-.wrap {
-  position: relative;     /* DŮLEŽITÉ: aby se overlay pozicoval vůči wrap */
-  width: 700px;
-}
-
-/* ===== TLAČÍTKO ŽEBŘÍČKU (vpravo nahoře nad canvasem) ===== */
+/* Tlačítko „Žebříček“ vpravo nahoře */
 .lb-toggle {
   position: absolute;
   top: 8px;
@@ -40,11 +40,11 @@ canvas {
 }
 .lb-toggle:hover { filter: brightness(1.08); }
 
-/* ===== PANEL ŽEBŘÍČKU (overlay nad rámečkem hry) ===== */
+/* Panel žebříčku (overlay nad rámečkem hry) */
 .lb-panel {
   position: absolute;
   left: 50%;
-  top: 50px;                 /* začíná nad obrazem; uprav dle potřeby */
+  top: 50px;                 /* případně uprav */
   transform: translateX(-50%);
   width: 680px;
   max-width: 95vw;
@@ -81,7 +81,7 @@ canvas {
   cursor: pointer;
 }
 
-/* Mřížka tří sloupců (Easy / Medium / Hard) */
+/* Mřížka tří sloupců */
 .lb-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -96,18 +96,17 @@ canvas {
   margin: 0;
   padding-left: 18px;   /* číslovaný seznam */
   color: #eee;
-  min-height: 3.5em;    /* aby sloupce držely výšku */
+  min-height: 3.5em;
 }
 .lb-me {
   margin-top: 8px;
   min-height: 1.4em;
-  color: #9fd1ff;       /* můj řádek pod TOP3 */
+  color: #9fd1ff;
 }
 
-/* ===== Mobilní úpravy ===== */
+/* Mobil */
 @media (max-width: 760px) {
   .wrap { width: 96vw; }
   canvas { width: 100%; height: auto; }
   .lb-panel { width: 96vw; }
 }
-``
