@@ -1,0 +1,11 @@
+html, body {
+  background: #1e1e1e;
+  margin: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+canvas {
+  border: 1px solid #333;
+  image-rendering: crisp-edges;
+}
