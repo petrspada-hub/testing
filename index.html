@@ -1,14 +1,44 @@
+
 <!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
   <title>CASUA Slicer (web)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
+  <link rel="icon" href="iconsheet" href<!-- Původní canvas -->
   <canvas id="game" width="700" height="300"></canvas>
-  <script src="script.js"></script>
+
+  <!-- Tlačítko pro otevření žebříčku -->
+  <button id="lbToggle" class="lb-toggle" aria-controls="lbPanel" aria-expanded="false">
+    Žebříček
+  </button>
+
+  <!-- Panel žebříčku -->
+  <section id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+    <div class="lb-header">
+      <input id="nick" type="text" placeholder="Tvoje jméno (nick)" autocomplete="nickname" />
+      <button id="saveNick">Uložit</button>
+    </div>
+
+    <div class="lb-grid">
+      <div class="lb-col">
+        <h4>Easy</h4>
+        <ol id="lb-easy" class="lb-list"></ol>
+        <div id="me-easy" class="lb-me"></div>
+      </div>
+      <div class="lb-col">
+        <h4>Medium</h4>
+        <ol id="lb-medium" class="lb-list"></ol>
+        <div id="me-medium" class="lb-me"></div>
+      </div>
+      <div class="lb-col">
+        <h4>Hard</h4>
+        <ol id="lb-hard" class="lb-list"></ol>
+        <div id="me-hard" class="lb-me"></div>
+      </div>
+    </div>
+  </  </section>
+
+  <!-- Původní script -->
+  script.js</script>
 </body>
-</html>
