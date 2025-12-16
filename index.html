@@ -5,23 +5,21 @@
   <meta charset="utf-8" />
   <title>CASUA Slicer (web)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  icon.png
+  <linkpng
+  <!-- externí CSS se styly tlačítka/panelu/canvasu -->
   style.css
 </head>
 <body>
   <div class="wrap">
-    <!-- Tlačítko pro zobrazení/skrytí žebříčku vpravo nahoře -->
+    <!-- Tlačítko vpravo nahoře pro zobrazení/skrytí panelu -->
     <button id="lbToggle" class="lb-toggle" title="Zobrazit žebříček">Žebříček</button>
 
     <!-- Skrytý panel žebříčku (overlay nad rámečkem hry) -->
     <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
-      <!-- Horní řádek: jméno + uložit (změna nicku nepřepíše skóre; jen se aktualizuje ve všech záznamech uživatele) -->
       <div class="lb-header">
         <input id="nick" type="text" placeholder="Jméno (nick)" maxlength="20" aria-label="Jméno (nick)" />
         <button id="saveNick">Uložit</button>
       </div>
-
-      <!-- Tři sloupce: Easy / Medium / Hard -->
       <div class="lb-grid">
         <div class="lb-col" aria-label="Easy">
           <h4>Easy</h4>
@@ -49,6 +47,7 @@
   </div>
 
   <!-- Logika hry + Supabase + žebříček -->
-   script.js</script>
+  script.js</script>
 </body>
+</html>
 
