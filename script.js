@@ -78,6 +78,7 @@
     [0,255,255],[0,255,0],[255,255,0],[255,127,0],
     [255,0,0],[255,0,255],[127,0,255],[0,0,255]
   ];
+
   const modes = ["easy","medium","hard"];
   let mi = 0, mode = modes[mi];
 
@@ -164,11 +165,10 @@
     if(cut===null){
       x.drawImage(img,ix,iy,iw,ih);
     } else {
-      const srcH = img.naturalHeight;
-      const scale = ih / srcH;
-      const rc = Math.round(cut / scale);
+      const sc = ih / img.naturalHeight;
+      const rc = Math.round(cut / sc);
       x.drawImage(
-        img,0,rc,img.naturalWidth,srcH-rc,
+        img,0,rc,img.naturalWidth,img.naturalHeight-rc,
         ix,iy+cut,iw,ih-cut
       );
     }
@@ -230,5 +230,57 @@
     reset(true);
     requestAnimationFrame(loop);
   };
-})();
 
+  /* =========================
+     LEADERBOARD
+     ========================= */
+  async function fetchTop3(diff) {
+    return sbGet(
+      `/rest/v1/scores?difficulty=eq.${diff}` +
+      `&select=uid,nick,score&order=score.desc&limit=3`
+    );
+  }
+
+  async function fetchMyBest(diff) {
+    const d = await sbGet(
+      `/rest/v1/scores?uid=eq.${UID}&difficulty=eq.${diff}` +
+      `&select=score&limit=1`
+    );
+    return d[0]?.score ?? "—";
+  }
+
+  function renderList(el, rows) {
+    el.innerHTML = rows.length
+      ? rows.map(r => `<li>${r.nick} — ${r.score}</li>`).join("")
+      : "<li>—</li>";
+  }
+
+  async function renderLeaderboard() {
+    const [e,m,h] = await Promise.all([
+      fetchTop3("easy"),
+      fetchTop3("medium"),
+      fetchTop3("hard")
+    ]);
+
+    renderList(document.getElementById("lb-easy"), e);
+    renderList(document.getElementById("lb-medium"), m);
+    renderList(document.getElementById("lb-hard"), h);
+
+    document.getElementById("me-easy").textContent   = await fetchMyBest("easy");
+    document.getElementById("me-medium").textContent = await fetchMyBest("medium");
+    document.getElementById("me-hard").textContent   = await fetchMyBest("hard");
+  }
+
+  function toggleLeaderboard() {
+    const p = document.getElementById("lbPanel");
+    p.classList.toggle("hidden");
+    if (!p.classList.contains("hidden")) {
+      getNick();
+      renderLeaderboard();
+    }
+  }
+
+  document.getElementById("lbToggle")
+    ?.addEventListener("click", toggleLeaderboard);
+
+})();
