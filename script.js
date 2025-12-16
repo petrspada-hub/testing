@@ -5,7 +5,8 @@
      SUPABASE
      ========================= */
   const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxamZ3Y3NydWdvcG1vdHR3bXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTMyMjIsImV4cCI6MjA4MTQyOTIyMn0.OztHP1F8II2zSKJb1biDqKs1xvO6Z8rWYsI2WSK8St8";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxamZ3Y3NydWdvcG1vdHR3bXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTMyMjIsImV4cCI6MjA4MTQyOTIyMn0.OztHP1F8II2zSKJb1biDqKs1xvO6Z8rWYsI2WSK8St8";
 
   async function sbGet(path) {
     const r = await fetch(`${SUPABASE_URL}${path}`, {
@@ -20,7 +21,7 @@
 
   async function sbUpsertScore(row) {
     await fetch(
-      `${SUPABASE_URL}/rest/v1/scores?on_conflict=uid,difficulty`,
+      `${SUPABASE_URL}/rest/v1/scores?on_conflict=vscore,difficulty`,
       {
         method: "POST",
         headers: {
@@ -35,23 +36,22 @@
   }
 
   /* =========================
-     UID + NICK
+     IDENTITA
      ========================= */
   const UID_LS = "CasuaSlicerUID";
   const NICK_LS = "CasuaSlicerNick";
 
   function ensureUID() {
-    let uid = localStorage.getItem(UID_LS);
-    if (!uid) {
+    let id = localStorage.getItem(UID_LS);
+    if (!id) {
       const b = new Uint8Array(16);
       crypto.getRandomValues(b);
-      uid = [...b].map(x => x.toString(16).padStart(2, "0")).join("");
-      uid = `${uid.slice(0,8)}-${uid.slice(8,12)}-${uid.slice(12,16)}-${uid.slice(16,20)}-${uid.slice(20)}`;
-      localStorage.setItem(UID_LS, uid);
+      id = [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem(UID_LS, id);
     }
-    return uid;
+    return id;
   }
-  const UID = ensureUID();
+  const VSCORE = ensureUID();
 
   function getNick() {
     const el = document.getElementById("nick");
@@ -122,7 +122,7 @@
       const nick = getNick();
       if (nick) {
         sbUpsertScore({
-          uid: UID,
+          vscore: VSCORE,
           nick,
           difficulty: mode,
           score: best[mode]
@@ -234,19 +234,19 @@
   /* =========================
      LEADERBOARD
      ========================= */
-  async function fetchTop3(diff) {
+  async function fetchTop3(d) {
     return sbGet(
-      `/rest/v1/scores?difficulty=eq.${diff}` +
-      `&select=uid,nick,score&order=score.desc&limit=3`
+      `/rest/v1/scores?difficulty=eq.${d}` +
+      `&select=nick,score&order=score.desc&limit=3`
     );
   }
 
-  async function fetchMyBest(diff) {
-    const d = await sbGet(
-      `/rest/v1/scores?uid=eq.${UID}&difficulty=eq.${diff}` +
+  async function fetchMyBest(d) {
+    const r = await sbGet(
+      `/rest/v1/scores?vscore=eq.${VSCORE}&difficulty=eq.${d}` +
       `&select=score&limit=1`
     );
-    return d[0]?.score ?? "—";
+    return r[0]?.score ?? "—";
   }
 
   function renderList(el, rows) {
@@ -256,15 +256,9 @@
   }
 
   async function renderLeaderboard() {
-    const [e,m,h] = await Promise.all([
-      fetchTop3("easy"),
-      fetchTop3("medium"),
-      fetchTop3("hard")
-    ]);
-
-    renderList(document.getElementById("lb-easy"), e);
-    renderList(document.getElementById("lb-medium"), m);
-    renderList(document.getElementById("lb-hard"), h);
+    renderList(document.getElementById("lb-easy"),   await fetchTop3("easy"));
+    renderList(document.getElementById("lb-medium"), await fetchTop3("medium"));
+    renderList(document.getElementById("lb-hard"),   await fetchTop3("hard"));
 
     document.getElementById("me-easy").textContent   = await fetchMyBest("easy");
     document.getElementById("me-medium").textContent = await fetchMyBest("medium");
