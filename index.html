@@ -1,0 +1,179 @@
+
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CASUA Slicer (test se žebříčkem)</title>
+
+  <!-- Základní stylování stránky, canvasu a žebříčku -->
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --panel: #121212;
+      --text: #ffffff;
+      --muted: #eee;
+      --border: #555;
+      --accent: #2d6cdf;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+
+    /* Kontejner drží canvas i overlay (panel + tlačítko) */
+    .wrap {
+      position: relative;       /* důležité: overlay se pozicuje relativně k wrap */
+      width: 700px;
+      margin: 24px auto;
+    }
+
+    /* Tlačítko vpravo nahoře nad canvasem (toggle panelu) */
+    .lb-toggle {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      padding: 6px 10px;
+      font: 14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: #282828;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0.92;
+      transition: filter .15s ease;
+    }
+    .lb-toggle:hover { filter: brightness(1.1); }
+
+    /* Skrytý panel žebříčku nad rámečkem hry */
+    .lb-panel {
+      position: absolute;
+      left: 50%;
+      top: 50px;                /* panel začíná nad obrazem (ten máš od y=100) – uprav dle potřeby */
+      transform: translateX(-50%);
+      width: 680px;
+      max-width: 95vw;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      z-index: 9;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .hidden { display: none; }
+
+    /* Hlavička panelu: nick + uložit */
+    .lb-header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .lb-header input {
+      flex: 1;
+      padding: 6px 8px;
+      background: #1e1e1e;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 4px;
+    }
+    .lb-header button {
+      padding: 6px 10px;
+      background: var(--accent);
+      border: 0;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Mřížka 3 sloupců (Easy/Medium/Hard) */
+    .lb-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .lb-col h4 {
+      margin: 4px 0 6px;
+      color: #fff;
+      font-weight: 600;
+    }
+    .lb-list {
+      margin: 0;
+      padding-left: 18px;  /* pro číslovaný seznam */
+      color: var(--muted);
+      min-height: 3.5em;   /* aby sloupec nevyskakoval */
+    }
+    /* „Můj řádek“ pod TOP 3 – zobrazí best hráče, nebo prázdno, když je hráč v TOP 3 */
+    .lb-me {
+      margin-top: 8px;
+      min-height: 1.4em;
+      color: #9fd1ff;
+    }
+
+    /* Canvas hry */
+    canvas {
+      display: block;
+      width: 700px;
+      height: 300px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: var(--bg);
+    }
+
+    /* Malé vylepšení pro mobil */
+    @media (max-width: 760px) {
+      .wrap { width: 96vw; }
+      canvas { width: 100%; height: auto; }
+      .lb-panel { width: 96vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Tlačítko pro zobrazení/skrytí žebříčku (vpravo nahoře v rozsahu Score/Best) -->
+    <button id="lbToggle" class="lb-toggle" title="Zobrazit žebříček">Žebříček</button>
+
+    <!-- Skrytý panel žebříčku (overlay nad rámečkem hry) -->
+    <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+      <!-- Horní řádek: jméno + uložit (změna nicku nepřepíše skóre; jen se aktualizuje ve všech záznamech uživatele) -->
+      <div class="lb-header">
+        <input id="nick" type="text" placeholder="Jméno (nick)" maxlength="20" aria-label="Jméno (nick)" />
+        <button id="saveNick">Uložit</button>
+      </div>
+
+      <!-- Tři sloupce: Easy / Medium / Hard -->
+      <div class="lb-grid">
+        <div class="lb-col" aria-label="Easy">
+          <h4>Easy</h4>
+          <ol id="lb-easy" class="lb-list"></ol>
+          <!-- Pod TOP3: můj best; pokud jsem v TOP3, zůstane prázdné -->
+          <div id="me-easy" class="lb-me"></div>
+        </div>
+
+        <div class="lb-col" aria-label="Medium">
+          <h4>Medium</h4>
+          <ol id="lb-medium" class="lb-list"></ol>
+          <div id="me-medium" class="lb-me"></div>
+        </div>
+
+        <div class="lb-col" aria-label="Hard">
+          <h4>Hard</h4>
+          <ol id="lb-hard" class="lb-list"></ol>
+          <div id="me-hard" class="lb-me"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas hry -->
+    <canvas id="game" width="700" height="300"></canvas>
+  </div>
+
+  <!-- Logika hry + Supabase + žebříček (viz upravený script.js) -->
+  script.js</script>
+</body>
+</html>
+``
