@@ -3,48 +3,48 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <title>CASUA Slicer (web)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  icon.png
+  <title>CASUA Slicer (web)</title>
   style.css
 </head>
 <body>
   <div class="wrap">
-    <!-- Tlačítko pro zobrazení/skrytí žebříčku -->
-    <button id="lbToggle" class="lb-toggle" title="Zobrazit žebříček">Žebříček</button>
+    <!-- tlačítko pro otevření žebříčku -->
+    <button id="lbToggle" class="lb-toggle" aria-controls="lbPanel" aria-expanded="false">
+      Žebříček
+    </button>
 
-    <!-- Skrytý panel žebříčku -->
-    <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+    <!-- plátno hry -->
+    <canvas id="game" width="700" height="300"></canvas>
+
+    <!-- overlay panel leaderboardu -->
+    <section id="lbPanel" class="lb-panel hidden" aria-hidden="true">
       <div class="lb-header">
-        <input id="nick" type="text" placeholder="Jméno (nick)" maxlength="20" aria-label="Jméno (nick)" />
+        <input id="nick" type="text" placeholder="Tvoje jméno (nick)" autocomplete="nickname" />
         <button id="saveNick">Uložit</button>
       </div>
 
       <div class="lb-grid">
-        <div class="lb-col" aria-label="Easy">
+        <div class="lb-col">
           <h4>Easy</h4>
           <ol id="lb-easy" class="lb-list"></ol>
           <div id="me-easy" class="lb-me"></div>
         </div>
-
-        <div class="lb-col" aria-label="Medium">
+        <div class="lb-col">
           <h4>Medium</h4>
           <ol id="lb-medium" class="lb-list"></ol>
           <div id="me-medium" class="lb-me"></div>
         </div>
-
-        <div class="lb-col" aria-label="Hard">
+        <div class="lb-col">
           <h4>Hard</h4>
           <ol id="lb-hard" class="lb-list"></ol>
           <div id="me-hard" class="lb-me"></div>
         </div>
       </div>
-    </div>
-
-    <!-- Canvas hry -->
-    <canvas id="game" width="700" height="300"></canvas>
+    </section>
   </div>
 
-  <!-- Logika hry + Supabase + žebříček -->
-  <script  <scriptjs</script>
+  script.js</script>
 </body>
+</html>
+``
