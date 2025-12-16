@@ -5,7 +5,7 @@
      SUPABASE
      ========================= */
   const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_n9N-pUl_fZpIFm9BccU7zQ_0ZPpLNsv";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxamZ3Y3NydWdvcG1vdHR3bXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTMyMjIsImV4cCI6MjA4MTQyOTIyMn0.OztHP1F8II2zSKJb1biDqKs1xvO6Z8rWYsI2WSK8St8";
 
   async function sbGet(path) {
     const r = await fetch(`${SUPABASE_URL}${path}`, {
@@ -231,3 +231,4 @@
     requestAnimationFrame(loop);
   };
 })();
+
