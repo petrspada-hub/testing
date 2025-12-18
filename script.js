@@ -6,6 +6,7 @@
   const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
   const SUPABASE_ANON =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxamZ3Y3NydWdvcG1vdHR3bXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTMyMjIsImV4cCI6MjA4MTQyOTIyMn0.OztHP1F8II2zSKJb1biDqKs1xvO6Z8rWYsI2WSK8St8";
+
   async function sbGet(path) {
     const url = SUPABASE_URL + path;
     const r = await fetch(url, {
@@ -19,6 +20,7 @@
     }
     return body;
   }
+
   // Upsert pomocí on_conflict=device_id,difficulty (aktualizuje i nick/score)
   async function sbUpsert(row) {
     const url = SUPABASE_URL + "/rest/v1/scores?on_conflict=device_id,difficulty";
@@ -39,6 +41,7 @@
       throw body ?? { error: `HTTP ${r.status}` };
     }
   }
+
   // Přejmenování všech záznamů pro aktuální device_id (ve všech obtížnostech)
   async function renameScoresForThisDevice(newNick) {
     const url = SUPABASE_URL + `/rest/v1/scores?device_id=eq.${DEVICE_ID}`;
@@ -72,56 +75,57 @@
     return id;
   }
   const DEVICE_ID = getDeviceId();
+
   const nickInput = document.getElementById("nick");
-  const nickBtn = document.getElementById("saveNick");
+  const nickBtn   = document.getElementById("saveNick");
   function getNick() { return localStorage.getItem("nick") ?? ""; }
   function setNick(nick) { localStorage.setItem("nick", nick); }
-  nickInput.value = getNick();
+  if (nickInput) nickInput.value = getNick();
 
   // Po uložení nicku: přejmenuj záznamy tohoto PC + zajisti/upsert pro všechny obtížnosti + refresh UI
-  nickBtn.onclick = async () => {
-    const n = nickInput.value.trim();
-    if (!n) return;
-    setNick(n);
-    // 1) Přepsat nick u všech záznamů z tohoto zařízení
-    await renameScoresForThisDevice(n);
-    // 2) Zajistit/updatovat záznamy pro všechny obtížnosti s aktuálním lokálním bestem
-    await ensureAllDifficultiesUpsert(n);
-    // 3) Refresh leaderboardu
-    await renderLeaderboard();
-  };
+  if (nickBtn) {
+    nickBtn.onclick = async () => {
+      const n = (nickInput?.value ?? "").trim();
+      if (!n) return;
+      setNick(n);
+      await renameScoresForThisDevice(n);
+      await ensureAllDifficultiesUpsert(n);
+      await renderLeaderboard();
+    };
+  }
 
   /* =========================
      LEADERBOARD
   ========================= */
-  const lbBtn = document.getElementById("lbToggle");
+  const lbBtn   = document.getElementById("lbToggle");
   const lbPanel = document.getElementById("lbPanel");
 
-  // === NOVÉ: referencia na řádek s nickem + helper pro zobrazení/skrývání ===
+  // --- NOVÉ: viditelnost nicku čistě přes inline display ---
   const nickRow = document.getElementById("nickRow");
   function setNickVisible(show) {
     if (nickRow) {
-      nickRow.classList.toggle("hidden", !show);
+      nickRow.style.display = show ? "" : "none";
     } else {
-      // Fallback: skrýváme samotné prvky, pokud wrapper neexistuje
+      // fallback, pokud by wrapper neexistoval
       if (nickInput) nickInput.style.display = show ? "" : "none";
       if (nickBtn)   nickBtn.style.display   = show ? "" : "none";
     }
   }
-  // Inicializace viditelnosti nicku podle stavu panelu (skrytý panel -> skrytý nick)
-  setNickVisible(!lbPanel.classList.contains("hidden"));
+  // Inicializace: nick vidět jen když je vidět panel
+  setNickVisible(lbPanel && !lbPanel.classList.contains("hidden"));
 
-  // === UPRAVENO: společný toggle panelu + nicku ===
-  lbBtn.onclick = () => {
-    const nowHidden = lbPanel.classList.toggle("hidden");
-    lbBtn.setAttribute("aria-expanded", (!nowHidden).toString());
-    lbPanel.setAttribute("aria-hidden", nowHidden.toString());
+  if (lbBtn) {
+    lbBtn.onclick = () => {
+      const nowHidden = lbPanel.classList.toggle("hidden");
+      lbBtn.setAttribute("aria-expanded", (!nowHidden).toString());
+      lbPanel.setAttribute("aria-hidden", nowHidden.toString());
 
-    // NOVĚ: nick se zobrazuje/skrývá spolu s panelem žebříčku
-    setNickVisible(!nowHidden);
+      // Nick spolu s panelem
+      setNickVisible(!nowHidden);
 
-    if (!nowHidden) renderLeaderboard();
-  };
+      if (!nowHidden) renderLeaderboard();
+    };
+  }
 
   function escapeHtml(v) {
     return String(v)
@@ -162,17 +166,17 @@
       const [meE, meM, meH] = await Promise.all([
         fetchMyBest("easy"), fetchMyBest("medium"), fetchMyBest("hard")
       ]);
-      document.getElementById("me-easy").textContent = meE;
+      document.getElementById("me-easy").textContent   = meE;
       document.getElementById("me-medium").textContent = meM;
-      document.getElementById("me-hard").textContent = meH;
+      document.getElementById("me-hard").textContent   = meH;
     } catch (e) {
       console.error("Render leaderboard selhal:", e);
-      renderList(document.getElementById("lb-easy"), []);
+      renderList(document.getElementById("lb-easy"),   []);
       renderList(document.getElementById("lb-medium"), []);
-      renderList(document.getElementById("lb-hard"), []);
-      document.getElementById("me-easy").textContent = "—";
+      renderList(document.getElementById("lb-hard"),   []);
+      document.getElementById("me-easy").textContent   = "—";
       document.getElementById("me-medium").textContent = "—";
-      document.getElementById("me-hard").textContent = "—";
+      document.getElementById("me-hard").textContent   = "—";
     }
   }
 
@@ -328,10 +332,10 @@ html, body, canvas, #game, .hitbox {
       drawLine(Math.round(ly), colors[idx], 2);
     }
 
-    // Vlevo: obtížnost (už funguje jako přepínač přes handle())
+    // Vlevo: obtížnost (klik vlevo nahoře v handle())
     drawText(mode.toUpperCase(),10,10,"#fff",16,"left");
 
-    // Vpravo: Score + Best (klikací oblast přidána v handle())
+    // Vpravo: Score + Best (klikací oblast v handle())
     drawText(`Score: ${score}`, W-10, 10, "#fff", 16, "right");
     drawText(`Best: ${bestLocal[mode]}`, W-10, 28, "#fff", 16, "right");
 
@@ -385,7 +389,7 @@ html, body, canvas, #game, .hitbox {
 
   // Interakce přes HITBOX
   function handle(mx, my){
-    // PŘEPÍNAČ OBTÍŽNOSTI (klik vlevo nahoře na text režimu)
+    // Přepínač obtížnosti (klik vlevo nahoře na text režimu)
     if(mx>=10 && mx<=140 && my>=10 && my<=40){
       const wasBetter = score > bestLocal[mode];
       saveBestLocal();
@@ -397,12 +401,11 @@ html, body, canvas, #game, .hitbox {
       return;
     }
 
-    // === NOVÉ: Toggle ŽEBŘÍČKU + NICK klikem na Score/Best vpravo nahoře ===
-    // Score: kreslí se na (W-10, 10), Best: na (W-10, 28), textAlign="right"
+    // --- NOVÉ: Toggle ŽEBŘÍČKU + Nicku klikem na Score/Best vpravo nahoře ---
     const rightWidth = 180; // šířka od pravého okraje
-    const topHeight  = 40;  // pokryje oba textové řádky (Score + Best)
+    const topHeight  = 40;  // výška pokrývající "Score" + "Best"
     if (mx >= W - rightWidth && mx <= W && my >= 10 && my <= 10 + topHeight) {
-      lbBtn.onclick();  // využijeme existující handler: panel + nick
+      lbBtn?.onclick?.();  // využijeme existující handler
       return;
     }
 
