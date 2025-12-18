@@ -176,7 +176,6 @@ canvas {
   /* Na mobilech sloupce pod sebe + menší mezery */
   .lb-grid {
     grid-template-columns: 1fr;
-    column-gap: 16px;
+       column-gap: 16px;
     row-gap: 10px;
   }
-}
