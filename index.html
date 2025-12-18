@@ -4,65 +4,42 @@
 <head>
   <meta charset="utf-8" />
   <title>CASUA Slicer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="tylesheet" href="style.css"y zůstává vystředěný */
-    #ui { position: relative; width:700px; margin:0 auto; }
-
-    /* Overlay žebříčku nad hrou (layout se nehýbe) */
-    #lbPanel {
-      position: absolute;
-      inset: 0;                /* left:0; top:0; right:0; bottom:0 */
-      display: none;           /* výchozí skryté */
-      background: rgba(0,0,0,0.86);
-      border: 1px solid #333;
-      padding: 12px;
-      z-index: 10000;          /* nad hitboxem */
-      backdrop-filter: blur(1px);
-    }
-    #lbPanel.show { display: block; }
-
-    /* Nick řádek se ukáže jen když je otevřen žebříček */
-    #nickRow { margin-bottom: 8px; display:none; }
-    #lbPanel.show #nickRow { display:block; }
-    #nick { width:140px; }
-
-    .cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-    ul { list-style:none; padding:0; margin:6px 0 0 0; }
-    li { font-size:14px; line-height:1.6; }
-    strong { letter-spacing: .5px; }
-  </style>
+  style.css
 </head>
-
 <body>
-  <div id="ui">
-    <!-- Overlay žebříčku (nad hrou) -->
-    <div id="lbPanel" aria-hidden="true">
-      <div id="nickRow">
-        Nick:
-        <input id="nick" type="text" maxlength="20">
+  <div class="wrap">
+    <!-- Hra -->
+    <canvas id="game" width="700" height="300"></canvas>
+
+    <!-- Tlačítko žebříčku vpravo nahoře (u Score/Best) -->
+    <button id="lbToggle" class="lb-toggle" aria-expanded="false">Žebříček</button>
+
+    <!-- Panel žebříčku nad hrou (overlay) + Nick -->
+    <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+      <div class="lb-header">
+        <input id="nick" type="text" placeholder="Nick" autocomplete="nickname" />
         <button id="saveNick">Uložit</button>
       </div>
 
-      <div class="cols">
-        <div>
-          <strong>EASY</strong>
-          <ul id="lb-easy"></ul>
+      <div class="lb-grid">
+        <div class="lb-col">
+          <h4>EASY</h4>
+          <ol id="lb-easy" class="lb-list"></ol>
         </div>
-        <div>
-          <strong>MEDIUM</strong>
-          <ul id="lb-medium"></ul>
+        <div class="lb-col">
+          <h4>MEDIUM</h4>
+          <ol id="lb-medium" class="lb-list"></ol>
         </div>
-        <div>
-          <strong>HARD</strong>
-          <ul id="lb-hard"></ul>
+        <div class="lb-col">
+          <h4>HARD</h4>
+          <ol id="lb-hard" class="lb-list"></ol>
         </div>
       </div>
     </div>
-
-    <!-- Plátno s hrou -->
-    <canvas id="game" width="700" height="300"></canvas>
   </div>
 
   script.js</script>
 </body>
-</
+</html>
+
+
