@@ -3,18 +3,30 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CASUA Slicer</title>
+  icon.png
   style.css
 </head>
+
 <body>
+  <!-- Kontejner kvůli overlay panelu -->
   <div class="wrap">
+    <!-- Horní lišta: jen tlačítko žebříčku -->
+    <div id="topbar">
+      <button id="lbToggle" class="lb-toggle" aria-expanded="false">Žebříček</button>
+    </div>
+
+    <!-- Hra -->
     <canvas id="game" width="700" height="300"></canvas>
-    <button id="lbToggle" class="lb-toggle" aria-expanded="false">Žebříček</button>
+
+    <!-- Panel žebříčku nad hrou (overlay) + Nick -->
     <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
       <div class="lb-header">
         <input id="nick" type="text" placeholder="Nick" autocomplete="nickname" />
         <button id="saveNick">Uložit</button>
       </div>
+
       <div class="lb-grid">
         <div class="lb-col">
           <h4>EASY</h4>
@@ -30,6 +42,9 @@
         </div>
       </div>
     </div>
-  </  </div>
+  </div>
+
   script.js</script>
 </body>
+</
+
