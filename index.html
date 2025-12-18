@@ -1,60 +1,126 @@
+
 <!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <title>CASUA Slicer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css" />
+  <title>CASUA Slicer</title>
+
   <style>
-    #ui { width:700px; margin:0 auto; }
-    #topbar { display:flex; justify-content:space-between; align-items:center; margin:6px 0; }
-    #lbToggle { background:#333; color:#fff; border:1px solid #444; padding:4px 8px; cursor:pointer; }
-    #lbPanel { border:1px solid #333; padding:8px; margin-top:6px; }
-    #lbPanel.hidden { display:none; }
-    #nickRow { margin-bottom:6px; }
-    #nick { width:140px; }
-    .cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-    ul { list-style:none; padding:0; margin:0; }
-    li { font-size:14px; }
-    .me { font-size:13px; color:#aaa; margin-top:4px; }
+    body {
+      margin: 20px;
+      background: #111;
+      color: #eee;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 10px 0;
+    }
+
+    /* schováme původní tlačítko žebříček, ovládání bude přes klik na Score/Best */
+    #lbToggle { display: none; }
+
+    /* wrapper pro nick (společně se žebříčkem se bude zobrazovat/skrývat) */
+    #nickRow {
+      margin: 10px 0 14px 0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    #nickRow.hidden { display: none; }
+    #nick {
+      background: #222;
+      color: #eee;
+      border: 1px solid #333;
+      padding: 6px 8px;
+      border-radius: 4px;
+      min-width: 160px;
+    }
+    #saveNick {
+      background: #2b6f2b;
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #saveNick:hover { background: #308a30; }
+
+    /* panel žebříčku */
+    #lbPanel {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin: 0 0 12px 0;
+    }
+    #lbPanel.hidden { display: none; }
+
+    #lbPanel h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+    #lbPanel .row {
+      margin: 6px 0 10px 0;
+    }
+    #lbPanel ul {
+      margin: 6px 0;
+      padding-left: 18px;
+    }
+
+    /* plátno hry */
+    #game {
+      border: 1px solid #333;
+      border-radius: 6px;
+      display: block;
+      background: #1e1e1e;
+    }
   </style>
 </head>
-
 <body>
-  <div id="ui">
-    <div id="topbar">
-      <div id="nickRow">
-        Nick:
-        <input id="nick" type="text" maxlength="20">
-        <button id="saveNick">Uložit</button>
-      </div>
-      <button id="lbToggle" aria-expanded="false">Žebříček</button>
-    </div>
 
-    <canvas id="game" width="700" height="300"></canvas>
+  <h1>CASUA Slicer</h1>
 
-    <div id="lbPanel" class="hidden" aria-hidden="true">
-      <div class="cols">
-        <div>
-          <strong>EASY</strong>
-          <ul id="lb-easy"></ul>
-          <div class="me">Moje best: <span id="me-easy"></span></div>
-        </div>
-        <div>
-          <strong>MEDIUM</strong>
-          <ul id="lb-medium"></ul>
-          <div class="me">Moje best: <span id="me-medium"></span></div>
-        </div>
-        <div>
-          <strong>HARD</strong>
-          <ul id="lb-hard"></ul>
-          <div class="me">Moje best: <span id="me-hard"></span></div>
-        </div>
-      </div>
-    </div>
+  <!-- Řádek pro nick (zobrazuje/skrývá se spolu s lbPanelem) -->
+  <div id="nickRow" class="hidden">
+    <label for="nick">Nick:</label>
+    <input id="nick" type="text" placeholder="Zadej jméno" />
+    <button id="saveNick">Uložit</button>
   </div>
 
-  <script src="script.js" defer></script>
+  <!-- Původní tlačítko žebříček ponecháno kvůli JS (skryté) -->
+  <button id="lbToggle" aria-expanded="false">Žebříček</button>
+
+  <!-- Panel žebříčku -->
+  <div id="lbPanel" class="hidden" aria-hidden="true">
+    <h3>Žebříček</h3>
+
+    <div class="row">
+      <strong>EASY</strong>
+      <ul id="lb-easy"></ul>
+      Moje best: <span id="me-easy">—</span>
+    </div>
+
+    <div class="row">
+      <strong>MEDIUM</strong>
+      <ul id="lb-medium"></ul>
+      Moje best: <span id="me-medium">—</span>
+    </div>
+
+    <div class="row">
+      <strong>HARD</strong>
+      <ul id="lb-hard"></ul>
+      Moje best: <span id="me-hard">—</span>
+    </div>
+    <small>Tip: Klikni na „Score/Best“ vpravo nahoře v canvasu pro otevření/zavření.</small>
+  </div>
+
+  <!-- Hra -->
+  <canvas id="game" width="700" height="300" aria-label="CASUA Slicer"></canvas>
+
+  <!-- Hlavní skript -->
+  script.js</script>
 </body>
-</html>
+</
