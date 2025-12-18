@@ -39,8 +39,8 @@
      NICK
      ========================= */
 
-  const nickInput = document.getElementById("nickInput");
-  const nickBtn = document.getElementById("nickSave");
+  const nickInput = document.getElementById("nick");
+  const nickBtn = document.getElementById("saveNick");
 
   function getNick() {
     return localStorage.getItem("nick") || "";
