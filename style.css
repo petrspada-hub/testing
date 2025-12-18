@@ -88,28 +88,36 @@ canvas {
   cursor: pointer;
 }
 
-/* Mřížka tří sloupců – každý sloupec 1/3 šířky
-   -> větší mezery mezi sloupci přes column-gap */
+/* --- Mřížka: 5 sloupců (1,3,5 obsah; 2,4 prázdné spacery) --- */
 .lb-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  column-gap: 28px;   /* zvětšené mezery mezi sloupci */
-  row-gap: 12px;      /* rozestup řádků v mřížce */
+  /* šířky: 1fr (obsah) | spacer | 1fr (obsah) | spacer | 1fr (obsah) */
+  grid-template-columns: 1fr 80px 1fr 80px 1fr; /* uprav 80px dle chuti (větší mezera) */
+  row-gap: 12px;
+  align-items: start;
 }
+
+/* Umístění tří obsahových sloupců do 1., 3., 5. grid sloupce */
+.lb-grid .lb-col:nth-child(1) { grid-column: 1; }
+.lb-grid .lb-col:nth-child(2) { grid-column: 3; }
+.lb-grid .lb-col:nth-child(3) { grid-column: 5; }
+
+/* Pokud by bylo .lb-col víc, vše po třetím ignorujeme / nebo rozšíříme logiku */
 
 /* Sloupce a nadpisy na střed */
 .lb-col {
-  text-align: center;         /* centrování obsahu sloupce jako celku */
+  text-align: center;
 }
 .lb-col h4 {
   margin: 4px 0 8px;
   color: #fff;
   font-weight: 700;
-  text-align: center;         /* explicitně na střed (pro jistotu) */
+  text-align: center;
   letter-spacing: .3px;
 }
 
-/* Seznam výsledků – centrovaný jako celek (hlavička sloupce), ale řádky si řídí vlastní grid */
+/* Seznam výsledků – centrovaný jako celek (hlavička sloupce),
+   ale řádky mají vlastní grid pro přesné zarovnání */
 .lb-list {
   margin: 0;
   padding: 0;              /* bez odsazení vlevo */
@@ -126,14 +134,14 @@ canvas {
 }
 
 /* Vnitřní rozložení řádku: ① rank | ② name | ③ score
-   - jména zarovnána vlevo, skóre vpravo
-   - sloupec jako celek je vizuálně uprostřed díky kontejneru .lb-col */
+   - jména vlevo, skóre vpravo
+   - sloupec jako celek je vizuálně uprostřed díky .lb-col */
 .lb-row {
   display: grid;
   grid-template-columns: auto 1fr auto; /* rank (auto) | name (1fr) | score (auto) */
   align-items: baseline;
   column-gap: 10px;         /* mezery mezi rank, name, score */
-  justify-items: center;    /* základní centrování buněk */
+  justify-items: center;    /* základní centrování buněk; detail přepíšeme níže */
 }
 
 /* Styl číslování */
@@ -165,10 +173,9 @@ canvas {
   canvas { width: 100%; height: auto; }
   .lb-panel { width: 96vw; }
 
-  /* Na mobilech sloupce pod sebe + menší mezery */
+  /* Na mobilech sloupce pod sebe; spacery zrušíme */
   .lb-grid {
     grid-template-columns: 1fr;
-    column-gap: 16px;
-    row-gap: 10px;
+    row-gap: 12px;
   }
 }
