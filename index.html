@@ -1,50 +1,30 @@
-
-<!doctype html>
-<html lang="cs">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CASUA Slicer</title>
-  icon.png
-  style.css
-</head>
-
-<body>
-  <!-- Kontejner kvůli overlay panelu -->
-  <div class="wrap">
-    <!-- Horní lišta: jen tlačítko žebříčku -->
-    <div id="topbar">
-      <button id="lbToggle" class="lb-toggle" aria-expanded="false">Žebříček</button>
+<div id="ui">
+  <div id="topbar" style="position:absolute; top:10px; right:10px; z-index:1000; text-align:right;">
+    <span id="scoreBest" style="cursor:pointer;">Score: <span id="currentScore">0</span> | Best: <span id="currentBest">0</span></span>
+    <div id="nickRow" style="display:none; margin-top:4px;">
+      Nick:
+      <input id="nick" type="text" maxlength="20">
+      <button id="saveNick">Uložit</button>
     </div>
+  </div>
 
-    <!-- Hra -->
-    <canvas id="game" width="700" height="300"></canvas>
-
-    <!-- Panel žebříčku nad hrou (overlay) + Nick -->
-    <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
-      <div class="lb-header">
-        <input id="nick" type="text" placeholder="Nick" autocomplete="nickname" />
-        <button id="saveNick">Uložit</button>
+  <div id="lbPanel" class="hidden" aria-hidden="true" style="position:absolute; top:50px; right:10px; width:300px; border:1px solid #333; background:#222; padding:8px;">
+    <div class="cols">
+      <div>
+        <strong>EASY</strong>
+        <ul id="lb-easy"></ul>
       </div>
-
-      <div class="lb-grid">
-        <div class="lb-col">
-          <h4>EASY</h4>
-          <ol id="lb-easy" class="lb-list"></ol>
-        </div>
-        <div class="lb-col">
-          <h4>MEDIUM</h4>
-          <ol id="lb-medium" class="lb-list"></ol>
-        </div>
-        <div class="lb-col">
-          <h4>HARD</h4>
-          <ol id="lb-hard" class="lb-list"></ol>
-        </div>
+      <div>
+        <strong>MEDIUM</strong>
+        <ul id="lb-medium"></ul>
+      </div>
+      <div>
+        <strong>HARD</strong>
+        <ul id="lb-hard"></ul>
       </div>
     </div>
   </div>
 
-  script.js</script>
-</body>
-</
+  <canvas id="game" width="700" height="300" style="display:block; margin:0 auto;"></canvas>
+</div>
 
