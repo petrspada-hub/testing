@@ -80,42 +80,36 @@
 
   const nickInput = document.getElementById("nick");
   const nickBtn   = document.getElementById("saveNick");
+  const topbar    = document.getElementById("topbar");
+  const nickRow   = document.getElementById("nickRow");
 
   function getNick() { return localStorage.getItem("nick") || ""; }
   function setNick(nick) { localStorage.setItem("nick", nick); }
 
+  // Výchozí skrytí jména (zobrazí se až spolu se žebříčkem)
+  nickRow.classList.add("hidden");
+  // Případně skryj původní topbar přepínač žebříčku (nebudeme ho používat)
+  const lbBtn   = document.getElementById("lbToggle");
+  const lbPanel = document.getElementById("lbPanel");
+  if (lbBtn) lbBtn.style.display = "none";
+
   nickInput.value = getNick();
 
-  // Po uložení nicku: přejmenuj záznamy tohoto PC + zajisti/upsert pro všechny obtížnosti + refresh UI
+  // Po uložení nicku: přejmenuj záznamy tohoto PC + upsert pro všechny obtížnosti + refresh UI
   nickBtn.onclick = async () => {
     const n = nickInput.value.trim();
     if (!n) return;
 
     setNick(n);
-
-    // 1) Přepsat nick u všech záznamů z tohoto zařízení
     await renameScoresForThisDevice(n);
-
-    // 2) Zajistit/updatovat záznamy pro všechny obtížnosti s aktuálním lokálním bestem
     await ensureAllDifficultiesUpsert(n);
-
-    // 3) Refresh leaderboardu
     await renderLeaderboard();
+    positionOverlay(); // přepočti pozici overlaye
   };
 
   /* =========================
-     LEADERBOARD
+     LEADERBOARD (TOP 5)
      ========================= */
-
-  const lbBtn   = document.getElementById("lbToggle");
-  const lbPanel = document.getElementById("lbPanel");
-
-  lbBtn.onclick = () => {
-    const nowHidden = lbPanel.classList.toggle("hidden");
-    lbBtn.setAttribute("aria-expanded", (!nowHidden).toString());
-    lbPanel.setAttribute("aria-hidden", nowHidden.toString());
-    if (!nowHidden) renderLeaderboard();
-  };
 
   function escapeHtml(v) {
     return String(v)
@@ -135,18 +129,8 @@
   async function fetchTop(diff) {
     return sbGet(
       `/rest/v1/scores?difficulty=eq.${diff}` +
-      `&select=nick,score&order=score.desc&limit=3`
+      `&select=nick,score&order=score.desc&limit=5`
     );
-  }
-
-  async function fetchMyBest(diff) {
-    const nick = getNick();
-    if (!nick) return "—";
-    const r = await sbGet(
-      `/rest/v1/scores?nick=eq.${nick}&difficulty=eq.${diff}` +
-      `&select=score&order=score.desc&limit=1`
-    );
-    return r[0]?.score ?? "—";
   }
 
   async function renderLeaderboard() {
@@ -157,21 +141,60 @@
       renderList(document.getElementById("lb-easy"),   topE);
       renderList(document.getElementById("lb-medium"), topM);
       renderList(document.getElementById("lb-hard"),   topH);
-
-      const [meE, meM, meH] = await Promise.all([
-        fetchMyBest("easy"), fetchMyBest("medium"), fetchMyBest("hard")
-      ]);
-      document.getElementById("me-easy").textContent   = meE;
-      document.getElementById("me-medium").textContent = meM;
-      document.getElementById("me-hard").textContent   = meH;
     } catch (e) {
       console.error("Render leaderboard selhal:", e);
       renderList(document.getElementById("lb-easy"),   []);
       renderList(document.getElementById("lb-medium"), []);
       renderList(document.getElementById("lb-hard"),   []);
-      document.getElementById("me-easy").textContent   = "—";
-      document.getElementById("me-medium").textContent = "—";
-      document.getElementById("me-hard").textContent   = "—";
+    }
+  }
+
+  // Skryj „Moje best“ řádky (nechceme je zobrazovat)
+  document.querySelectorAll(".me").forEach(el => { el.style.display = "none"; });
+
+  // Overlay: panel žebříčku a nick přesuneme nad hru a pozicujeme absolutně
+  const uiContainer = document.getElementById("ui");
+  // Zajistíme, že parent je relativní (kvůli absolute overlay)
+  const uiStyle = getComputedStyle(uiContainer);
+  if (uiStyle.position === "static") uiContainer.style.position = "relative";
+
+  // Nastavení overlay stylů (nebude ovlivňovat rozložení, hra zůstane na středu)
+  lbPanel.style.position = "absolute";
+  lbPanel.style.zIndex = "1000"; // nad hitboxem
+  lbPanel.classList.add("hidden");
+
+  function positionOverlay() {
+    // šířka overlaye = šířka canvasu, pozice přímo nad ním
+    lbPanel.style.width = `${c.offsetWidth}px`;
+    lbPanel.style.left  = `${c.offsetLeft}px`;
+
+    // Nejprve dočasně zobrazit pro získání výšky? Ne — spočítáme opatrně:
+    const panelHeight = lbPanel.offsetHeight || 120; // fallback
+    const top = Math.max(0, c.offsetTop - panelHeight - 8);
+    lbPanel.style.top   = `${top}px`;
+
+    // Nick přesuneme do panelu (aby byl součástí overlaye)
+    if (!lbPanel.contains(nickRow)) {
+      lbPanel.prepend(nickRow);
+    }
+  }
+
+  function toggleOverlay(show) {
+    const hidden = lbPanel.classList.contains("hidden");
+    const wantShow = show ?? hidden; // pokud není show definováno, přepínej
+
+    if (wantShow) {
+      lbPanel.classList.remove("hidden");
+      nickRow.classList.remove("hidden");
+      renderLeaderboard().then(positionOverlay);
+    } else {
+      lbPanel.classList.add("hidden");
+      nickRow.classList.add("hidden");
+
+      // Nick vrátíme do topbaru (ale stále skrytý)
+      if (!topbar.contains(nickRow)) {
+        topbar.prepend(nickRow);
+      }
     }
   }
 
@@ -199,7 +222,7 @@
         background: transparent;
         touch-action: none;
         -webkit-touch-callout: none;
-        z-index: 9999;
+        z-index: 999; /* pod overlayem */
       }
     `;
     const style = document.createElement('style');
@@ -329,9 +352,12 @@
       const idx = clamp(co + step, 0, colors.length - 1);
       drawLine(Math.round(ly), colors[idx], 2);
     }
+    // Vlevo nahoře: přepínání obtížnosti (původní)
     drawText(mode.toUpperCase(),10,10,"#fff",16,"left");
+    // Vpravo nahoře: Score/Best (zde kliknutím přepínáme žebříček)
     drawText(`Score: ${score}`,W-10,10,"#fff",16,"right");
     drawText(`Best: ${bestLocal[mode]}`,W-10,28,"#fff",16,"right");
+
     if(first){
       drawText("Stiskni mezerník nebo klikni na CASUA",W/2,10,"#fff",18,"center");
     } else if(cut !== null){
@@ -382,7 +408,7 @@
 
   // Interakce přes HITBOX
   function handle(mx, my){
-    // Přepínač režimu (klik vlevo nahoře na text režimu)
+    // (1) Přepínač režimu — vlevo nahoře
     if(mx>=10 && mx<=140 && my>=10 && my<=40){
       const wasBetter = score > bestLocal[mode];
       saveBestLocal();
@@ -394,7 +420,18 @@
       reset(true);
       return;
     }
-    // Řez — oblast obrázku
+
+    // (2) Tlačítko ŽEBŘÍČEK — vpravo nahoře v oblasti Score/Best
+    //   zvolíme obdélník cca 150px široký, výška přes oba řádky (10..40)
+    const RB_X1 = W - 160, RB_X2 = W - 10, RB_Y1 = 10, RB_Y2 = 40;
+    if(mx >= RB_X1 && mx <= RB_X2 && my >= RB_Y1 && my <= RB_Y2){
+      // přepni overlay (žebříček + jméno)
+      const show = lbPanel.classList.contains("hidden");
+      toggleOverlay(show);
+      return;
+    }
+
+    // (3) Řez — oblast obrázku
     if(mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih){
       triggerSlice();
     }
@@ -413,7 +450,8 @@
     const mx = e.clientX - r.left;
     const my = e.clientY - r.top;
     const overImage = (mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih);
-    hitbox.style.cursor = overImage ? "pointer" : "default";
+    const overRightBtn = (mx >= (W-160) && mx <= (W-10) && my >= 10 && my <= 40);
+    hitbox.style.cursor = (overImage || overRightBtn) ? "pointer" : "default";
   });
 
   // Umístění HITBOXU
@@ -422,6 +460,7 @@
     hitbox.style.top    = `${c.offsetTop}px`;
     hitbox.style.width  = `${c.offsetWidth}px`;
     hitbox.style.height = `${c.offsetHeight}px`;
+    positionOverlay(); // overlay držíme nad hrou
   }
   const ro = new ResizeObserver(placeHitbox);
   ro.observe(c);
@@ -486,10 +525,12 @@
     }
   }
 
-  // Volitelné: při startu, pokud je nick už nastaven, zajistíme záznamy
+  // Při startu, pokud je nick už nastaven, zajistíme záznamy
   (async () => {
     const n = getNick();
     if (n) { try { await ensureAllDifficultiesUpsert(n); } catch {} }
+    // počáteční umístění overlaye
+    positionOverlay();
   })();
 
 })();
