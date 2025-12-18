@@ -89,7 +89,13 @@
     return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
   }
   function renderList(el, rows) {
-    el.innerHTML = rows.length ? rows.map(r => `<li>${escapeHtml(r.nick)} — ${escapeHtml(r.score)}</li>`).join("") : "<li>—</li>";
+    if (!rows.length) {
+      el.innerHTML = "<li>—</li>";
+      return;
+    }
+    el.innerHTML = rows
+      .map((r, i) => `<li><span class="rank">${i + 1}.</span> ${escapeHtml(r.nick)} — ${escapeHtml(r.score)}</li>`)
+      .join("");
   }
   async function fetchTop(diff) {
     return sbGet(`/rest/v1/scores?difficulty=eq.${diff}&select=nick,score&order=score.desc&limit=3`);
@@ -264,3 +270,4 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
   const hitboxParent = c.parentElement ?? document.body;
   hitboxParent.appendChild(hitbox);
 })();
+
