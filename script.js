@@ -1,4 +1,3 @@
-
 (() => {
   const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
   const SUPABASE_ANON =
@@ -60,11 +59,14 @@
     return id;
   }
   const DEVICE_ID = getDeviceId();
+
   const nickInput = document.getElementById("nick");
   const nickBtn = document.getElementById("saveNick");
+  const nickRow = document.getElementById("nickRow");
+  nickInput.value = localStorage.getItem("nick") ?? "";
+
   function getNick() { return localStorage.getItem("nick") ?? ""; }
   function setNick(nick) { localStorage.setItem("nick", nick); }
-  nickInput.value = getNick();
 
   nickBtn.onclick = async () => {
     const n = nickInput.value.trim();
@@ -75,16 +77,16 @@
     await renderLeaderboard();
   };
 
-  const lbBtn = document.getElementById("lbToggle");
   const lbPanel = document.getElementById("lbPanel");
+  const scoreBest = document.getElementById("scoreBest");
 
-  lbBtn.onclick = () => {
+  scoreBest.onclick = () => {
     const nowHidden = lbPanel.classList.toggle("hidden");
-    lbBtn.setAttribute("aria-expanded", (!nowHidden).toString());
     lbPanel.setAttribute("aria-hidden", nowHidden.toString());
+    nickRow.style.display = !nowHidden ? "block" : "none";
     if (!nowHidden) {
       renderLeaderboard();
-      setTimeout(() => nickInput?.focus(), 0);
+      nickInput?.focus();
     }
   };
 
@@ -105,8 +107,7 @@
 
   async function fetchTop(diff) {
     return sbGet(
-      `/rest/v1/scores?difficulty=eq.${diff}` +
-      `&select=nick,score&order=score.desc&limit=5`
+      `/rest/v1/scores?difficulty=eq.${diff}&select=nick,score&order=score.desc&limit=5`
     );
   }
 
