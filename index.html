@@ -1,60 +1,53 @@
+
 <!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
   <title>CASUA Slicer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    #ui { width:700px; margin:0 auto; }
-    #topbar { display:flex; justify-content:space-between; align-items:center; margin:6px 0; }
-    #lbToggle { background:#333; color:#fff; border:1px solid #444; padding:4px 8px; cursor:pointer; }
-    #lbPanel { border:1px solid #333; padding:8px; margin-top:6px; }
-    #lbPanel.hidden { display:none; }
-    #nickRow { margin-bottom:6px; }
-    #nick { width:140px; }
-    .cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-    ul { list-style:none; padding:0; margin:0; }
-    li { font-size:14px; }
-    .me { font-size:13px; color:#aaa; margin-top:4px; }
-  </style>
-</head>
+  <link rel="icon" href="iconsheet" href <div class="wrap">
+    <!-- Horní neviditelná lišta pro pozicování -->
+    <div id="topbar"></div>
 
-<body>
-  <div id="ui">
-    <div id="topbar">
-      <div id="nickRow">
-        Nick:
-        <input id="nick" type="text" maxlength="20">
-        <button id="saveNick">Uložit</button>
-      </div>
-      <button id="lbToggle" aria-expanded="false">Žebříček</button>
-    </div>
-
+    <!-- Canvas hry -->
     <canvas id="game" width="700" height="300"></canvas>
 
-    <div id="lbPanel" class="hidden" aria-hidden="true">
-      <div class="cols">
-        <div>
-          <strong>EASY</strong>
-          <ul id="lb-easy"></ul>
+    <!-- Tlačítko žebříčku vpravo nahoře -->
+    <button class="lb-toggle" aria-expanded="false">Žebříček</button>
+
+    <!-- Panel žebříčku (overlay) -->
+    <div class="lb-panel hidden" aria-hidden="true">
+      <!-- Hlavička panelu: Nick + Uložit -->
+      <div class="lb-header">
+        <input id="nick" type="text" maxlength="20" placeholder="Nick">
+        <button id="saveNick">Uložit</button>
+      </div>
+
+      <!-- Mřížka žebříčku: 3 sloupce -->
+      <div class="lb-grid">
+        <!-- EASY -->
+        <div class="lb-col">
+          <h4>EASY</h4>
+          <ul id="lb-easy" class="lb-list"></ul>
           <div class="me">Moje best: <span id="me-easy">—</span></div>
         </div>
-        <div>
-          <strong>MEDIUM</strong>
-          <ul id="lb-medium"></ul>
+
+        <!-- MEDIUM -->
+        <div class="lb-col">
+          <h4>MEDIUM</h4>
+          <ul id="lb-medium" class="lb-list"></ul>
           <div class="me">Moje best: <span id="me-medium">—</span></div>
         </div>
-        <div>
-          <strong>HARD</strong>
-          <ul id="lb-hard"></ul>
+
+        <!-- HARD -->
+        <div class="lb-col">
+          <h4>HARD</h4>
+          <ul id="lb-hard" class="lb-list"></ul>
           <div class="me">Moje best: <span id="me-hard">—</span></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="script.js" defer></script>
-</body>
-</html>
+  script.js</script>
+</</body>
