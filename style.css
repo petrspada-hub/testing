@@ -88,30 +88,33 @@ canvas {
   cursor: pointer;
 }
 
-/* Mřížka tří sloupců – každý sloupec 1/3 šířky */
+/* Mřížka tří sloupců – každý sloupec 1/3 šířky
+   -> větší mezery mezi sloupci přes column-gap */
 .lb-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  column-gap: 28px;   /* zvětšené mezery mezi sloupci */
+  row-gap: 12px;      /* rozestup řádků v mřížce */
 }
 
 /* Sloupce a nadpisy na střed */
 .lb-col {
-  text-align: center;
+  text-align: center;         /* centrování obsahu sloupce jako celku */
 }
 .lb-col h4 {
-  margin: 4px 0 6px;
+  margin: 4px 0 8px;
   color: #fff;
-  font-weight: 600;
-  text-align: center;
+  font-weight: 700;
+  text-align: center;         /* explicitně na střed (pro jistotu) */
+  letter-spacing: .3px;
 }
 
-/* Seznam výsledků – centrovaný jako celek */
+/* Seznam výsledků – centrovaný jako celek (hlavička sloupce), ale řádky si řídí vlastní grid */
 .lb-list {
   margin: 0;
   padding: 0;              /* bez odsazení vlevo */
   list-style: none;        /* skryj defaultní markery ol/ul */
-  text-align: center;      /* nadpisy a prázdné stavy jako celek na střed */
+  text-align: center;      /* prázdné stavy a celkový blok na střed */
   line-height: 1.4;
   color: #eee;
   min-height: 3.5em;
@@ -122,29 +125,30 @@ canvas {
   margin: 2px 0;
 }
 
-/* Vnitřní rozložení řádku: ① rank | ② name | ③ score */
+/* Vnitřní rozložení řádku: ① rank | ② name | ③ score
+   - jména zarovnána vlevo, skóre vpravo
+   - sloupec jako celek je vizuálně uprostřed díky kontejneru .lb-col */
 .lb-row {
   display: grid;
   grid-template-columns: auto 1fr auto; /* rank (auto) | name (1fr) | score (auto) */
   align-items: baseline;
-  column-gap: 8px;
-  /* Centrovaný sloupec jako celek; konkrétní buňky přepíšeme níže */
-  justify-items: center;
+  column-gap: 10px;         /* mezery mezi rank, name, score */
+  justify-items: center;    /* základní centrování buněk */
 }
 
 /* Styl číslování */
 .lb-row .rank {
-  font-weight: 600;
+  font-weight: 700;
   color: #ffd166;
-  justify-self: start; /* posuneme číslo k levému okraji v rámci řádku */
+  justify-self: start;      /* číslo přirazíme vlevo v rámci řádku */
 }
 
-/* Zarovnání name a score pod sebou */
+/* Zarovnání jména a skóre pod sebou */
 .lb-row .name {
-  justify-self: start;   /* jména vlevo */
+  justify-self: start;      /* jména vlevo */
 }
 .lb-row .score {
-  justify-self: end;     /* skóre vpravo */
+  justify-self: end;        /* skóre vpravo */
   font-variant-numeric: tabular-nums; /* stejné šířky číslic => lepší vertikální zarovnání */
 }
 
@@ -155,9 +159,16 @@ canvas {
   color: #ffd166;
 }
 
-//* Mobil */
+/* Mobil */
 @media (max-width: 760px) {
   .wrap { width: 96vw; }
   canvas { width: 100%; height: auto; }
   .lb-panel { width: 96vw; }
-  .lb-grid { grid-template-columns: 1fr; } /* sloupce pod sebe na mobilech */
+
+  /* Na mobilech sloupce pod sebe + menší mezery */
+  .lb-grid {
+    grid-template-columns: 1fr;
+    column-gap: 16px;
+    row-gap: 10px;
+  }
+}
