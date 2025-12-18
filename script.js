@@ -2,12 +2,10 @@
 (() => {
   /* =========================
      SUPABASE
-     ========================= */
-
+  ========================= */
   const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
   const SUPABASE_ANON =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxamZ3Y3NydWdvcG1vdHR3bXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTMyMjIsImV4cCI6MjA4MTQyOTIyMn0.OztHP1F8II2zSKJb1biDqKs1xvO6Z8rWYsI2WSK8St8";
-
   async function sbGet(path) {
     const url = SUPABASE_URL + path;
     const r = await fetch(url, {
@@ -17,11 +15,10 @@
     try { body = await r.json(); } catch (_) {}
     if (!r.ok) {
       console.error("Supabase GET error:", r.status, url, body);
-      throw body || { error: `HTTP ${r.status}` };
+      throw body ?? { error: `HTTP ${r.status}` };
     }
     return body;
   }
-
   // Upsert pomocí on_conflict=device_id,difficulty (aktualizuje i nick/score)
   async function sbUpsert(row) {
     const url = SUPABASE_URL + "/rest/v1/scores?on_conflict=device_id,difficulty";
@@ -39,10 +36,9 @@
     try { body = await r.json(); } catch (_) {}
     if (!r.ok) {
       console.error("Supabase UPSERT error:", r.status, url, body);
-      throw body || { error: `HTTP ${r.status}` };
+      throw body ?? { error: `HTTP ${r.status}` };
     }
   }
-
   // Přejmenování všech záznamů pro aktuální device_id (ve všech obtížnostech)
   async function renameScoresForThisDevice(newNick) {
     const url = SUPABASE_URL + `/rest/v1/scores?device_id=eq.${DEVICE_ID}`;
@@ -64,8 +60,7 @@
 
   /* =========================
      IDENTIFIKACE ZAŘÍZENÍ + NICK
-     ========================= */
-
+  ========================= */
   // Trvalé device_id v localStorage
   const DEVICE_KEY = "CasuaSlicerDeviceId";
   function getDeviceId() {
@@ -77,43 +72,54 @@
     return id;
   }
   const DEVICE_ID = getDeviceId();
-
   const nickInput = document.getElementById("nick");
-  const nickBtn   = document.getElementById("saveNick");
-
-  function getNick() { return localStorage.getItem("nick") || ""; }
+  const nickBtn = document.getElementById("saveNick");
+  function getNick() { return localStorage.getItem("nick") ?? ""; }
   function setNick(nick) { localStorage.setItem("nick", nick); }
-
   nickInput.value = getNick();
 
   // Po uložení nicku: přejmenuj záznamy tohoto PC + zajisti/upsert pro všechny obtížnosti + refresh UI
   nickBtn.onclick = async () => {
     const n = nickInput.value.trim();
     if (!n) return;
-
     setNick(n);
-
     // 1) Přepsat nick u všech záznamů z tohoto zařízení
     await renameScoresForThisDevice(n);
-
     // 2) Zajistit/updatovat záznamy pro všechny obtížnosti s aktuálním lokálním bestem
     await ensureAllDifficultiesUpsert(n);
-
     // 3) Refresh leaderboardu
     await renderLeaderboard();
   };
 
   /* =========================
      LEADERBOARD
-     ========================= */
-
-  const lbBtn   = document.getElementById("lbToggle");
+  ========================= */
+  const lbBtn = document.getElementById("lbToggle");
   const lbPanel = document.getElementById("lbPanel");
 
+  // === NOVÉ: referencia na řádek s nickem + helper pro zobrazení/skrývání ===
+  const nickRow = document.getElementById("nickRow");
+  function setNickVisible(show) {
+    if (nickRow) {
+      nickRow.classList.toggle("hidden", !show);
+    } else {
+      // Fallback: skrýváme samotné prvky, pokud wrapper neexistuje
+      if (nickInput) nickInput.style.display = show ? "" : "none";
+      if (nickBtn)   nickBtn.style.display   = show ? "" : "none";
+    }
+  }
+  // Inicializace viditelnosti nicku podle stavu panelu (skrytý panel -> skrytý nick)
+  setNickVisible(!lbPanel.classList.contains("hidden"));
+
+  // === UPRAVENO: společný toggle panelu + nicku ===
   lbBtn.onclick = () => {
     const nowHidden = lbPanel.classList.toggle("hidden");
     lbBtn.setAttribute("aria-expanded", (!nowHidden).toString());
     lbPanel.setAttribute("aria-hidden", nowHidden.toString());
+
+    // NOVĚ: nick se zobrazuje/skrývá spolu s panelem žebříčku
+    setNickVisible(!nowHidden);
+
     if (!nowHidden) renderLeaderboard();
   };
 
@@ -125,20 +131,17 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;");
   }
-
   function renderList(el, rows) {
     el.innerHTML = rows.length
       ? rows.map(r => `<li>${escapeHtml(r.nick)} — ${escapeHtml(r.score)}</li>`).join("")
       : "<li>—</li>";
   }
-
   async function fetchTop(diff) {
     return sbGet(
       `/rest/v1/scores?difficulty=eq.${diff}` +
       `&select=nick,score&order=score.desc&limit=3`
     );
   }
-
   async function fetchMyBest(diff) {
     const nick = getNick();
     if (!nick) return "—";
@@ -148,37 +151,34 @@
     );
     return r[0]?.score ?? "—";
   }
-
   async function renderLeaderboard() {
     try {
       const [topE, topM, topH] = await Promise.all([
         fetchTop("easy"), fetchTop("medium"), fetchTop("hard")
       ]);
-      renderList(document.getElementById("lb-easy"),   topE);
+      renderList(document.getElementById("lb-easy"), topE);
       renderList(document.getElementById("lb-medium"), topM);
-      renderList(document.getElementById("lb-hard"),   topH);
-
+      renderList(document.getElementById("lb-hard"), topH);
       const [meE, meM, meH] = await Promise.all([
         fetchMyBest("easy"), fetchMyBest("medium"), fetchMyBest("hard")
       ]);
-      document.getElementById("me-easy").textContent   = meE;
+      document.getElementById("me-easy").textContent = meE;
       document.getElementById("me-medium").textContent = meM;
-      document.getElementById("me-hard").textContent   = meH;
+      document.getElementById("me-hard").textContent = meH;
     } catch (e) {
       console.error("Render leaderboard selhal:", e);
-      renderList(document.getElementById("lb-easy"),   []);
+      renderList(document.getElementById("lb-easy"), []);
       renderList(document.getElementById("lb-medium"), []);
-      renderList(document.getElementById("lb-hard"),   []);
-      document.getElementById("me-easy").textContent   = "—";
+      renderList(document.getElementById("lb-hard"), []);
+      document.getElementById("me-easy").textContent = "—";
       document.getElementById("me-medium").textContent = "—";
-      document.getElementById("me-hard").textContent   = "—";
+      document.getElementById("me-hard").textContent = "—";
     }
   }
 
   /* =========================
      HRA (původní logika)
-     ========================= */
-
+  ========================= */
   const W = 700, H = 300;
   const c = document.getElementById("game");
   const x = c.getContext("2d");
@@ -188,20 +188,20 @@
   // CSS anti tap-highlight / user-select
   (function injectNoTapCSS(){
     const css = `
-      html, body, canvas, #game, .hitbox {
-        -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        outline: none !important;
-      }
-      .hitbox {
-        position: absolute;
-        background: transparent;
-        touch-action: none;
-        -webkit-touch-callout: none;
-        z-index: 9999;
-      }
-    `;
+html, body, canvas, #game, .hitbox {
+  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  outline: none !important;
+}
+.hitbox {
+  position: absolute;
+  background: transparent;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  z-index: 9999;
+}
+`;
     const style = document.createElement('style');
     style.textContent = css;
     document.head.appendChild(style);
@@ -210,10 +210,9 @@
   // Průhledný HITBOX nad canvasem
   const hitbox = document.createElement('div');
   hitbox.className = 'hitbox';
-  const parent = c.parentElement || document.body;
+  const parent = c.parentElement ?? document.body;
   const ps = getComputedStyle(parent);
   if (ps.position === 'static') parent.style.position = 'relative';
-
   c.setAttribute('tabindex', '-1');
   c.style.outline = 'none';
   c.style.userSelect = 'none';
@@ -250,7 +249,7 @@
     const d = diff[m];
     base = d.speed;
     spd = base - d.acc;
-    co  = base - 1;
+    co = base - 1;
     TOL = Math.floor(ih * d.tolerancePct);
   }
   function reset(full=false){
@@ -264,14 +263,12 @@
       spd = base - diff[mode].acc;
     }
   }
-
   function saveBestLocal(){
     if (score > bestLocal[mode]) {
       bestLocal[mode] = score;
       localStorage.setItem(LS, JSON.stringify(bestLocal));
     }
   }
-
   // Upsert globálního skóre na základě device_id (volá se při zlepšení)
   async function saveBestGlobal() {
     try {
@@ -299,7 +296,6 @@
     x.stroke();
   }
   function clamp(v,l,h){ return Math.max(l, Math.min(h, v)); }
-
   function update(){
     if(cut===null){
       ly += spd * dir;
@@ -310,6 +306,7 @@
   function render(){
     x.fillStyle = "#1e1e1e";
     x.fillRect(0,0,W,H);
+
     if(cut === null){
       x.drawImage(img, ix, iy, iw, ih);
     } else {
@@ -324,18 +321,24 @@
         iw, ih - cut
       );
     }
+
     if(cut === null){
       const step = Math.trunc((spd - base) / 0.5);
       const idx = clamp(co + step, 0, colors.length - 1);
       drawLine(Math.round(ly), colors[idx], 2);
     }
+
+    // Vlevo: obtížnost (už funguje jako přepínač přes handle())
     drawText(mode.toUpperCase(),10,10,"#fff",16,"left");
-    drawText(`Score: ${score}`,W-10,10,"#fff",16,"right");
-    drawText(`Best: ${bestLocal[mode]}`,W-10,28,"#fff",16,"right");
+
+    // Vpravo: Score + Best (klikací oblast přidána v handle())
+    drawText(`Score: ${score}`, W-10, 10, "#fff", 16, "right");
+    drawText(`Best: ${bestLocal[mode]}`, W-10, 28, "#fff", 16, "right");
+
     if(first){
-      drawText("Stiskni mezerník nebo klikni na CASUA",W/2,10,"#fff",18,"center");
+      drawText("Stiskni mezerník nebo klikni na CASUA", W/2, 10, "#fff", 18, "center");
     } else if(cut !== null){
-      drawText(hit ? "PERFECT!" : "FAIL!", W/2,10, hit?"#0f0":"#f00",20,"center");
+      drawText(hit ? "PERFECT!" : "FAIL!", W/2, 10, hit?"#0f0":"#f00", 20, "center");
     }
   }
   function loop(){
@@ -382,23 +385,33 @@
 
   // Interakce přes HITBOX
   function handle(mx, my){
-    // Přepínač režimu (klik vlevo nahoře na text režimu)
+    // PŘEPÍNAČ OBTÍŽNOSTI (klik vlevo nahoře na text režimu)
     if(mx>=10 && mx<=140 && my>=10 && my<=40){
       const wasBetter = score > bestLocal[mode];
       saveBestLocal();
       if (wasBetter) saveBestGlobal().catch(()=>{});
-
       mi = (mi+1) % modes.length;
       mode = modes[mi];
       setMode(mode);
       reset(true);
       return;
     }
+
+    // === NOVÉ: Toggle ŽEBŘÍČKU + NICK klikem na Score/Best vpravo nahoře ===
+    // Score: kreslí se na (W-10, 10), Best: na (W-10, 28), textAlign="right"
+    const rightWidth = 180; // šířka od pravého okraje
+    const topHeight  = 40;  // pokryje oba textové řádky (Score + Best)
+    if (mx >= W - rightWidth && mx <= W && my >= 10 && my <= 10 + topHeight) {
+      lbBtn.onclick();  // využijeme existující handler: panel + nick
+      return;
+    }
+
     // Řez — oblast obrázku
     if(mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih){
       triggerSlice();
     }
   }
+
   hitbox.addEventListener("pointerdown", e=>{
     e.preventDefault();
     const r = c.getBoundingClientRect();
@@ -418,9 +431,9 @@
 
   // Umístění HITBOXU
   function placeHitbox(){
-    hitbox.style.left   = `${c.offsetLeft}px`;
-    hitbox.style.top    = `${c.offsetTop}px`;
-    hitbox.style.width  = `${c.offsetWidth}px`;
+    hitbox.style.left = `${c.offsetLeft}px`;
+    hitbox.style.top = `${c.offsetTop}px`;
+    hitbox.style.width = `${c.offsetWidth}px`;
     hitbox.style.height = `${c.offsetHeight}px`;
   }
   const ro = new ResizeObserver(placeHitbox);
@@ -449,21 +462,20 @@
   img.onerror = ()=>{
     x.fillStyle="#1e1e1e";
     x.fillRect(0,0,W,H);
-    drawText("Chybí soubor obrazek.png",W/2,H/2-10,"#f88",18,"center");
+    drawText("Chybí soubor obrazek.png", W/2, H/2-10, "#f88", 18, "center");
     placeHitbox();
   };
 
   /* =========================
      Veřejné API (volitelné)
-     ========================= */
+  ========================= */
   // Uložení skóre z jiných částí hry
   window.saveScore = async function (difficulty, newScore) {
     const nick = getNick();
     if (!nick) return;
     if (!["easy","medium","hard"].includes(difficulty)) return;
     if (typeof newScore !== "number" || !isFinite(newScore)) return;
-
-    if (newScore > (bestLocal[difficulty] || 0)) {
+    if (newScore > (bestLocal[difficulty] ?? 0)) {
       bestLocal[difficulty] = newScore;
       localStorage.setItem(LS, JSON.stringify(bestLocal));
       try {
@@ -475,21 +487,19 @@
   };
 
   /* =========================
-     Pomocná funkce:
-     zajistí/upsertne řádky pro všechny obtížnosti
-     ========================= */
+     Helper: zajistí/upsertne řádky pro všechny obtížnosti
+  ========================= */
   async function ensureAllDifficultiesUpsert(nick) {
     const localBest = { easy: bestLocal.easy, medium: bestLocal.medium, hard: bestLocal.hard };
     for (const d of ["easy","medium","hard"]) {
-      const s = localBest[d] || 0;
+      const s = localBest[d] ?? 0;
       await sbUpsert({ device_id: DEVICE_ID, nick, difficulty: d, score: s });
     }
   }
 
-  // Volitelné: při startu, pokud je nick už nastaven, zajistíme záznamy
+  // Volitelně: při startu, pokud je nick už nastaven, zajistíme záznamy
   (async () => {
     const n = getNick();
     if (n) { try { await ensureAllDifficultiesUpsert(n); } catch {} }
   })();
-
 })();
