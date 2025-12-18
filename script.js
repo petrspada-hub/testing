@@ -21,7 +21,6 @@
     return body;
   }
 
-  // Upsert pomocí on_conflict=device_id,difficulty (aktualizuje i nick/score)
   async function sbUpsert(row) {
     const url = SUPABASE_URL + "/rest/v1/scores?on_conflict=device_id,difficulty";
     const r = await fetch(url, {
@@ -40,6 +39,76 @@
       console.error("Supabase UPSERT error:", r.status, url, body);
       throw body ?? { error: `HTTP ${r.status}` };
     }
+  }
+
+  // NOVÉ: Smazání všech záznamů pro aktuální zařízení (device_id)
+  async function sbDeleteDeviceScores() {
+    const url = SUPABASE_URL + `/rest/v1/scores?device_id=eq.${DEVICE_ID}`;
+    const r = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: "Bearer " + SUPABASE_ANON,
+        Prefer: "return=minimal"
+      }
+    });
+    if (!r.ok) {
+      let body = null; try { body = await r.json(); } catch(_) {}
+      console.error("Supabase DELETE error:", r.status, url, body);
+      throw body ?? { error: `HTTP ${r.status}` };
+    }
+  }
+
+  /* =========================
+     IDENTIFIKACE ZAŘÍZENÍ + NICK
+  ========================= */
+  const DEVICE_KEY = "CasuaSlicerDeviceId";
+  function getDeviceId() {
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) {
+      id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
+      localStorage.setItem(DEVICE_KEY, id);
+    }
+    return id;
+  }
+  const DEVICE_ID = getDeviceId();
+
+  const nickInput = document.getElementById("nick");
+  const nickBtn   = document.getElementById("saveNick");
+  function getNick() { return localStorage.getItem("nick") ?? ""; }
+  function setNick(nick) { localStorage.setItem("nick", nick); }
+  function clearNick()   { localStorage.removeItem("nick"); }
+  if (nickInput) nickInput.value = getNick();
+
+  // Uložení nicku: pokud je prázdný → smaž Supabase záznamy pro device_id
+  if (nickBtn) {
+    nickBtn.onclick = async () => {
+      const n = (nickInput?.value ?? "").trim();
+
+      if (!n) {
+        // PRÁZDNÝ NICK: odstranit nick lokálně + smazat záznamy v Supabase
+        try {
+          clearNick();
+          if (nickInput) nickInput.value = "";
+          await sbDeleteDeviceScores();
+          // refresh leaderboardu (už neuvidíš záznamy tohoto zařízení)
+          await renderLeaderboard();
+        } catch (e) {
+          console.error("Mazání záznamů při prázdném nicku selhalo:", e);
+        }
+        return;
+      }
+
+      // NICK VYPLNĚN: klasický flow (rename + upsert + refresh)
+      try {
+        setNick(n);
+        await renameScoresForThisDevice(n);
+        await ensureAllDifficultiesUpsert(n);
+        await renderLeaderboard();
+      } catch (e) {
+        console.error("Ukládání nicku/upsert selhal:", e);
+      }
+    };
   }
 
   // Přejmenování všech záznamů pro aktuální device_id (ve všech obtížnostech)
@@ -62,44 +131,12 @@
   }
 
   /* =========================
-     IDENTIFIKACE ZAŘÍZENÍ + NICK
-  ========================= */
-  const DEVICE_KEY = "CasuaSlicerDeviceId";
-  function getDeviceId() {
-    let id = localStorage.getItem(DEVICE_KEY);
-    if (!id) {
-      id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
-      localStorage.setItem(DEVICE_KEY, id);
-    }
-    return id;
-  }
-  const DEVICE_ID = getDeviceId();
-
-  const nickInput = document.getElementById("nick");
-  const nickBtn   = document.getElementById("saveNick");
-  function getNick() { return localStorage.getItem("nick") ?? ""; }
-  function setNick(nick) { localStorage.setItem("nick", nick); }
-  if (nickInput) nickInput.value = getNick();
-
-  // Uložení nicku: přejmenovat + upsert pro všechny obtížnosti + refresh
-  if (nickBtn) {
-    nickBtn.onclick = async () => {
-      const n = (nickInput?.value ?? "").trim();
-      if (!n) return;
-      setNick(n);
-      await renameScoresForThisDevice(n);
-      await ensureAllDifficultiesUpsert(n);
-      await renderLeaderboard();
-    };
-  }
-
-  /* =========================
      LEADERBOARD
   ========================= */
   const lbBtn   = document.getElementById("lbToggle");
   const lbPanel = document.getElementById("lbPanel");
 
-  // SCHOVAT tlačítko "Žebříček" (ovládání přes Score/Best klik)
+  // SCHOVAT tlačítko "Žebříček" (ovládání je přes Score/Best klik)
   if (lbBtn) lbBtn.style.display = "none";
 
   // Odstranit řádky "Moje best:" z panelu žebříčku
@@ -119,18 +156,13 @@
   // Inicializace: nick vidět jen když je panel vidět
   setNickVisible(lbPanel && !lbPanel.classList.contains("hidden"));
 
-  // Toggle panelu + nicku (voláme i z klikací oblasti Score/Best)
   function toggleLeaderboard() {
     const nowHidden = lbPanel.classList.toggle("hidden");
     lbPanel.setAttribute("aria-hidden", nowHidden.toString());
-    // lbBtn může být skrytý, ale kvůli ARIA ho udržujeme konzistentní
     lbBtn?.setAttribute("aria-expanded", (!nowHidden).toString());
-
     setNickVisible(!nowHidden);
     if (!nowHidden) renderLeaderboard();
   }
-
-  // Ponecháme onclick kvůli kompatibilitě (volá naši toggle funkci)
   if (lbBtn) lbBtn.onclick = toggleLeaderboard;
 
   function escapeHtml(v) {
@@ -152,9 +184,7 @@
       `&select=nick,score&order=score.desc&limit=3`
     );
   }
-
-  // Z panelu jsme odstranili "Moje best:", takže fetchMyBest už nepotřebujeme
-  // Pokud bys ho jinde potřeboval, ponechávám ho k dispozici:
+  // (fetchMyBest ponechán pro případné další použití mimo panel)
   async function fetchMyBest(diff) {
     const nick = getNick();
     if (!nick) return "—";
@@ -173,8 +203,7 @@
       renderList(document.getElementById("lb-easy"),   topE);
       renderList(document.getElementById("lb-medium"), topM);
       renderList(document.getElementById("lb-hard"),   topH);
-
-      // "Moje best:" už v panelu neexistuje → nic nevyplňujeme
+      // "Moje best:" v panelu nevyplňujeme (elementy jsme odstranili)
     } catch (e) {
       console.error("Render leaderboard selhal:", e);
       renderList(document.getElementById("lb-easy"),   []);
@@ -353,7 +382,7 @@ html, body, canvas, #game, .hitbox {
     requestAnimationFrame(loop);
   }
 
-  // Společná akce pro Space + tap/klik
+  // Space / klik
   async function triggerSlice(){
     first=false;
     if(cut===null){
@@ -381,7 +410,6 @@ html, body, canvas, #game, .hitbox {
     }
   }
 
-  // Klávesnice: Space
   window.addEventListener("keydown", e=>{
     if(e.code==="Space"){
       e.preventDefault();
@@ -391,7 +419,7 @@ html, body, canvas, #game, .hitbox {
 
   // Interakce přes HITBOX
   function handle(mx, my){
-    // Přepínač obtížnosti (klik vlevo nahoře na text režimu)
+    // Přepínač obtížnosti (klik vlevo nahoře)
     if(mx>=10 && mx<=140 && my>=10 && my<=40){
       const wasBetter = score > bestLocal[mode];
       saveBestLocal();
@@ -507,3 +535,4 @@ html, body, canvas, #game, .hitbox {
     if (n) { try { await ensureAllDifficultiesUpsert(n); } catch {} }
   })();
 })();
+``
