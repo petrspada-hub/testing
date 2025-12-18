@@ -22,8 +22,9 @@
     return body;
   }
 
+  // Upsert pomocí on_conflict=device_id,difficulty (aktualizuje i nick/score)
   async function sbUpsert(row) {
-    const url = SUPABASE_URL + "/rest/v1/scores?on_conflict=nick,difficulty";
+    const url = SUPABASE_URL + "/rest/v1/scores?on_conflict=device_id,difficulty";
     const r = await fetch(url, {
       method: "POST",
       headers: {
@@ -42,27 +43,68 @@
     }
   }
 
+  // Přejmenování všech záznamů pro aktuální device_id (ve všech obtížnostech)
+  async function renameScoresForThisDevice(newNick) {
+    const url = SUPABASE_URL + `/rest/v1/scores?device_id=eq.${DEVICE_ID}`;
+    const r = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: "Bearer " + SUPABASE_ANON,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({ nick: newNick })
+    });
+    if (!r.ok) {
+      let body = null; try { body = await r.json(); } catch(_) {}
+      console.error("Rename (PATCH) failed:", r.status, body);
+    }
+  }
+
   /* =========================
-     NICK
+     IDENTIFIKACE ZAŘÍZENÍ + NICK
      ========================= */
+
+  // Trvalé device_id v localStorage
+  const DEVICE_KEY = "CasuaSlicerDeviceId";
+  function getDeviceId() {
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) {
+      id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
+      localStorage.setItem(DEVICE_KEY, id);
+    }
+    return id;
+  }
+  const DEVICE_ID = getDeviceId();
 
   const nickInput = document.getElementById("nick");
   const nickBtn   = document.getElementById("saveNick");
 
-  function getNick() {
-    return localStorage.getItem("nick") || "";
-  }
-  function setNick(nick) {
-    localStorage.setItem("nick", nick);
-  }
+  function getNick() { return localStorage.getItem("nick") || ""; }
+  function setNick(nick) { localStorage.setItem("nick", nick); }
+
   nickInput.value = getNick();
-  nickBtn.onclick = () => {
+
+  // Po uložení nicku: přejmenuj záznamy tohoto PC + zajisti/upsert pro všechny obtížnosti + refresh UI
+  nickBtn.onclick = async () => {
     const n = nickInput.value.trim();
-    if (n) setNick(n);
+    if (!n) return;
+
+    setNick(n);
+
+    // 1) Přepsat nick u všech záznamů z tohoto zařízení
+    await renameScoresForThisDevice(n);
+
+    // 2) Zajistit/updatovat záznamy pro všechny obtížnosti s aktuálním lokálním bestem
+    await ensureAllDifficultiesUpsert(n);
+
+    // 3) Refresh leaderboardu
+    await renderLeaderboard();
   };
 
   /* =========================
-     UI: Žebříček
+     LEADERBOARD
      ========================= */
 
   const lbBtn   = document.getElementById("lbToggle");
@@ -83,17 +125,20 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;");
   }
+
   function renderList(el, rows) {
     el.innerHTML = rows.length
       ? rows.map(r => `<li>${escapeHtml(r.nick)} — ${escapeHtml(r.score)}</li>`).join("")
       : "<li>—</li>";
   }
+
   async function fetchTop(diff) {
     return sbGet(
       `/rest/v1/scores?difficulty=eq.${diff}` +
       `&select=nick,score&order=score.desc&limit=3`
     );
   }
+
   async function fetchMyBest(diff) {
     const nick = getNick();
     if (!nick) return "—";
@@ -103,6 +148,7 @@
     );
     return r[0]?.score ?? "—";
   }
+
   async function renderLeaderboard() {
     try {
       const [topE, topM, topH] = await Promise.all([
@@ -130,7 +176,7 @@
   }
 
   /* =========================
-     HRA (z vaší původní verze)
+     HRA (původní logika)
      ========================= */
 
   const W = 700, H = 300;
@@ -218,6 +264,7 @@
       spd = base - diff[mode].acc;
     }
   }
+
   function saveBestLocal(){
     if (score > bestLocal[mode]) {
       bestLocal[mode] = score;
@@ -225,14 +272,12 @@
     }
   }
 
-  // === Integrace globálního skóre přes Supabase ===
-  // Zavolá se při dosažení nového lokálního maxima.
+  // Upsert globálního skóre na základě device_id (volá se při zlepšení)
   async function saveBestGlobal() {
     try {
       const nick = getNick();
-      if (!nick) return; // bez nicku nic neukládáme
-      // jen pokud je lepší než lokální best
-      await sbUpsert({ nick, difficulty: mode, score: score });
+      if (!nick) return;
+      await sbUpsert({ device_id: DEVICE_ID, nick, difficulty: mode, score });
     } catch (e) {
       console.error("Ukládání globálního skóre selhalo:", e);
     }
@@ -265,7 +310,6 @@
   function render(){
     x.fillStyle = "#1e1e1e";
     x.fillRect(0,0,W,H);
-    // Přepočet řezu na originální výšku obrázku
     if(cut === null){
       x.drawImage(img, ix, iy, iw, ih);
     } else {
@@ -313,7 +357,6 @@
         r = SV;
       } else {
         hit=false;
-        // uložit lokální best + globální
         const wasBetter = score > bestLocal[mode];
         saveBestLocal();
         if (wasBetter) await saveBestGlobal();
@@ -339,9 +382,8 @@
 
   // Interakce přes HITBOX
   function handle(mx, my){
-    // Přepínač režimu (vlevo nahoře) — klik na nápis režimu
+    // Přepínač režimu (klik vlevo nahoře na text režimu)
     if(mx>=10 && mx<=140 && my>=10 && my<=40){
-      // uložit best před přepnutím
       const wasBetter = score > bestLocal[mode];
       saveBestLocal();
       if (wasBetter) saveBestGlobal().catch(()=>{});
@@ -412,25 +454,42 @@
   };
 
   /* =========================
-     Veřejné API pro jiné části (volitelné)
+     Veřejné API (volitelné)
      ========================= */
-  // Pokud byste chtěl ukládat skóre přímo z jiné části hry:
+  // Uložení skóre z jiných částí hry
   window.saveScore = async function (difficulty, newScore) {
-    if (!["easy","medium","hard"].includes(difficulty)) return;
     const nick = getNick();
     if (!nick) return;
+    if (!["easy","medium","hard"].includes(difficulty)) return;
     if (typeof newScore !== "number" || !isFinite(newScore)) return;
 
-    // aktualizuj lokální best a případně ulož globálně
     if (newScore > (bestLocal[difficulty] || 0)) {
       bestLocal[difficulty] = newScore;
       localStorage.setItem(LS, JSON.stringify(bestLocal));
       try {
-        await sbUpsert({ nick, difficulty, score: newScore });
+        await sbUpsert({ device_id: DEVICE_ID, nick, difficulty, score: newScore });
       } catch (e) {
         console.error("saveScore: globální uložení selhalo", e);
       }
     }
   };
+
+  /* =========================
+     Pomocná funkce:
+     zajistí/upsertne řádky pro všechny obtížnosti
+     ========================= */
+  async function ensureAllDifficultiesUpsert(nick) {
+    const localBest = { easy: bestLocal.easy, medium: bestLocal.medium, hard: bestLocal.hard };
+    for (const d of ["easy","medium","hard"]) {
+      const s = localBest[d] || 0;
+      await sbUpsert({ device_id: DEVICE_ID, nick, difficulty: d, score: s });
+    }
+  }
+
+  // Volitelné: při startu, pokud je nick už nastaven, zajistíme záznamy
+  (async () => {
+    const n = getNick();
+    if (n) { try { await ensureAllDifficultiesUpsert(n); } catch {} }
+  })();
 
 })();
