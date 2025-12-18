@@ -90,11 +90,19 @@
   }
   function renderList(el, rows) {
     if (!rows.length) {
-      el.innerHTML = "<li>—</li>";
+      el.innerHTML = "<li><div class=\"lb-row\"><span class=\"name\">—</span><span class=\"score\"></span></div></li>";
       return;
     }
     el.innerHTML = rows
-      .map((r, i) => `<li><span class="rank">${i + 1}.</span> ${escapeHtml(r.nick)}     ${escapeHtml(r.score)}</li>`)
+      .map((r, i) =>
+        `<li>
+          <div class="lb-row">
+            <span class="rank">${i + 1}.</span>
+            <span class="name">${escapeHtml(r.nick)}</span>
+            <span class="score">${escapeHtml(r.score)}</span>
+          </div>
+        </li>`
+      )
       .join("");
   }
   async function fetchTop(diff) {
@@ -270,5 +278,6 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
   const hitboxParent = c.parentElement ?? document.body;
   hitboxParent.appendChild(hitbox);
 })();
+
 
 
