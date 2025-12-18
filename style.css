@@ -46,11 +46,11 @@ canvas {
 }
 .lb-toggle:hover { filter: brightness(1.08); }
 
-/* Panel žebříčku (overlay nad rámem hry) – ponecháme jako BLOK, ne grid */
+/* Panel žebříčku (overlay nad rámem hry) */
 .lb-panel {
   position: absolute;
   left: 50%;
-  top: 50px; /* doladíš dle potřeby */
+  top: 50px; /* doladíte dle potřeby */
   transform: translateX(-50%);
   width: 680px;
   max-width: 95vw;
@@ -89,36 +89,39 @@ canvas {
 }
 
 /* ─────────────────────────────────────────
-   MŘÍŽKA ŽEBŘÍČKU: 3 sloupce + VELKÁ MEZERA
-   (grid je jen na .lb-grid, nikoli na #lbPanel)
+   MŘÍŽKA ŽEBŘÍČKU: 3 sloupce + VELKÝ ODSTUP
    ───────────────────────────────────────── */
 .lb-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  /* velká mezera mezi sloupci – uprav dle vkusu */
-  column-gap: clamp(56px, 12vw, 180px);
-  row-gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));  /* 3 stejné sloupce */
+  column-gap: 120px;                                  /* <<< VELKÁ MEZERA MEZI SLOUPCI */
+  row-gap: 12px;                                      /* rozestup řádků */
   align-items: start;
 }
 
+/* (Volitelné) responzivní odstup dle šířky okna
+   -> místo pevné 120px lze použít adaptivní variantu:
+   column-gap: clamp(24px, 10vw, 160px);
+*/
+
 /* Sloupce a nadpisy na střed */
 .lb-col {
-  text-align: center; /* centrování obsahu sloupce jako celku */
+  text-align: center;         /* sloupec jako celek na střed */
 }
 .lb-col h4 {
   margin: 4px 0 8px;
   color: #fff;
   font-weight: 700;
-  text-align: center; /* explicitně na střed */
+  text-align: center;         /* explicitně na střed */
   letter-spacing: .3px;
 }
 
-/* Seznam výsledků – kontejner na střed (kvůli prázdnému stavu),
+/* Seznam výsledků – kontejner jako celek centrovaný,
    ale řádky uvnitř mají vlastní grid pro přesné zarovnání */
 .lb-list {
   margin: 0;
   padding: 0;              /* bez odsazení vlevo */
-  list-style: none;        /* skryj defaultní markery OL/UL */
+  list-style: none;        /* skryj defaultní markery ol/ul */
   text-align: center;      /* prázdné stavy a celkový blok na střed */
   line-height: 1.4;
   color: #eee;
@@ -132,7 +135,7 @@ canvas {
 
 /* Vnitřní rozložení řádku: ① rank | ② name | ③ score
    - jména vlevo, skóre vpravo
-   - sloupec jako celek je vizuálně uprostřed díky .lb-col */
+   - sloupec je vizuálně uprostřed díky .lb-col */
 .lb-row {
   display: grid;
   grid-template-columns: auto 1fr auto; /* rank (auto) | name (1fr) | score (auto) */
@@ -174,6 +177,6 @@ canvas {
   .lb-grid {
     grid-template-columns: 1fr;
     column-gap: 16px;
-    row-gap: 10px    row-gap: 10px;
+    row-gap: 10px;
   }
-  
+}
