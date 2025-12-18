@@ -19,7 +19,7 @@ html, body {
 /* Horní lišta – drží tlačítko vpravo nahoře */
 #topbar {
   position: relative;
-  height: 0;          /* nevymezujeme výšku, jen umožníme absolutní tlačítko */
+  height: 0; /* nevymezujeme výšku, jen umožníme absolutní tlačítko */
 }
 
 /* Canvas hry */
@@ -61,6 +61,7 @@ canvas {
   z-index: 9;
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
+
 .hidden { display: none; }
 
 /* Hlavička panelu: Nick + Uložit */
@@ -87,27 +88,76 @@ canvas {
   cursor: pointer;
 }
 
-/* Mřížka tří sloupců */
+/* Mřížka tří sloupců – každý sloupec 1/3 šířky */
 .lb-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
+
+/* Sloupce a nadpisy na střed */
+.lb-col {
+  text-align: center;
+}
 .lb-col h4 {
   margin: 4px 0 6px;
   color: #fff;
   font-weight: 600;
+  text-align: center;
 }
+
+/* Seznam výsledků – centrovaný jako celek */
 .lb-list {
   margin: 0;
-  padding-left: 18px; /* očíslovaný seznam */
+  padding: 0;              /* bez odsazení vlevo */
+  list-style: none;        /* skryj defaultní markery ol/ul */
+  text-align: center;      /* nadpisy a prázdné stavy jako celek na střed */
+  line-height: 1.4;
   color: #eee;
   min-height: 3.5em;
 }
 
-/* Mobil */
+/* Jednotlivé položky seznamu */
+.lb-list li {
+  margin: 2px 0;
+}
+
+/* Vnitřní rozložení řádku: ① rank | ② name | ③ score */
+.lb-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* rank (auto) | name (1fr) | score (auto) */
+  align-items: baseline;
+  column-gap: 8px;
+  /* Centrovaný sloupec jako celek; konkrétní buňky přepíšeme níže */
+  justify-items: center;
+}
+
+/* Styl číslování */
+.lb-row .rank {
+  font-weight: 600;
+  color: #ffd166;
+  justify-self: start; /* posuneme číslo k levému okraji v rámci řádku */
+}
+
+/* Zarovnání name a score pod sebou */
+.lb-row .name {
+  justify-self: start;   /* jména vlevo */
+}
+.lb-row .score {
+  justify-self: end;     /* skóre vpravo */
+  font-variant-numeric: tabular-nums; /* stejné šířky číslic => lepší vertikální zarovnání */
+}
+
+/* (volitelné) zvýraznit TOP 3 */
+.lb-list li:nth-child(-n+3) .name,
+.lb-list li:nth-child(-n+3) .score {
+  font-weight: 600;
+  color: #ffd166;
+}
+
+//* Mobil */
 @media (max-width: 760px) {
   .wrap { width: 96vw; }
   canvas { width: 100%; height: auto; }
   .lb-panel { width: 96vw; }
-}
+  .lb-grid { grid-template-columns: 1fr; } /* sloupce pod sebe na mobilech */
