@@ -64,7 +64,6 @@
   /* =========================
      IDENTIFIKACE ZAŘÍZENÍ + NICK
   ========================= */
-  // Trvalé device_id v localStorage
   const DEVICE_KEY = "CasuaSlicerDeviceId";
   function getDeviceId() {
     let id = localStorage.getItem(DEVICE_KEY);
@@ -82,7 +81,7 @@
   function setNick(nick) { localStorage.setItem("nick", nick); }
   if (nickInput) nickInput.value = getNick();
 
-  // Po uložení nicku: přejmenuj záznamy tohoto PC + zajisti/upsert pro všechny obtížnosti + refresh UI
+  // Uložení nicku: přejmenovat + upsert pro všechny obtížnosti + refresh
   if (nickBtn) {
     nickBtn.onclick = async () => {
       const n = (nickInput?.value ?? "").trim();
@@ -100,32 +99,39 @@
   const lbBtn   = document.getElementById("lbToggle");
   const lbPanel = document.getElementById("lbPanel");
 
-  // --- NOVÉ: viditelnost nicku čistě přes inline display ---
+  // SCHOVAT tlačítko "Žebříček" (ovládání přes Score/Best klik)
+  if (lbBtn) lbBtn.style.display = "none";
+
+  // Odstranit řádky "Moje best:" z panelu žebříčku
+  document.querySelectorAll("#lbPanel .me").forEach(el => el.remove());
+
+  // Viditelnost nicku přes inline display (společně s panelem)
   const nickRow = document.getElementById("nickRow");
   function setNickVisible(show) {
     if (nickRow) {
       nickRow.style.display = show ? "" : "none";
     } else {
-      // fallback, pokud by wrapper neexistoval
+      // fallback, kdyby wrapper neexistoval
       if (nickInput) nickInput.style.display = show ? "" : "none";
       if (nickBtn)   nickBtn.style.display   = show ? "" : "none";
     }
   }
-  // Inicializace: nick vidět jen když je vidět panel
+  // Inicializace: nick vidět jen když je panel vidět
   setNickVisible(lbPanel && !lbPanel.classList.contains("hidden"));
 
-  if (lbBtn) {
-    lbBtn.onclick = () => {
-      const nowHidden = lbPanel.classList.toggle("hidden");
-      lbBtn.setAttribute("aria-expanded", (!nowHidden).toString());
-      lbPanel.setAttribute("aria-hidden", nowHidden.toString());
+  // Toggle panelu + nicku (voláme i z klikací oblasti Score/Best)
+  function toggleLeaderboard() {
+    const nowHidden = lbPanel.classList.toggle("hidden");
+    lbPanel.setAttribute("aria-hidden", nowHidden.toString());
+    // lbBtn může být skrytý, ale kvůli ARIA ho udržujeme konzistentní
+    lbBtn?.setAttribute("aria-expanded", (!nowHidden).toString());
 
-      // Nick spolu s panelem
-      setNickVisible(!nowHidden);
-
-      if (!nowHidden) renderLeaderboard();
-    };
+    setNickVisible(!nowHidden);
+    if (!nowHidden) renderLeaderboard();
   }
+
+  // Ponecháme onclick kvůli kompatibilitě (volá naši toggle funkci)
+  if (lbBtn) lbBtn.onclick = toggleLeaderboard;
 
   function escapeHtml(v) {
     return String(v)
@@ -146,6 +152,9 @@
       `&select=nick,score&order=score.desc&limit=3`
     );
   }
+
+  // Z panelu jsme odstranili "Moje best:", takže fetchMyBest už nepotřebujeme
+  // Pokud bys ho jinde potřeboval, ponechávám ho k dispozici:
   async function fetchMyBest(diff) {
     const nick = getNick();
     if (!nick) return "—";
@@ -155,28 +164,22 @@
     );
     return r[0]?.score ?? "—";
   }
+
   async function renderLeaderboard() {
     try {
       const [topE, topM, topH] = await Promise.all([
         fetchTop("easy"), fetchTop("medium"), fetchTop("hard")
       ]);
-      renderList(document.getElementById("lb-easy"), topE);
+      renderList(document.getElementById("lb-easy"),   topE);
       renderList(document.getElementById("lb-medium"), topM);
-      renderList(document.getElementById("lb-hard"), topH);
-      const [meE, meM, meH] = await Promise.all([
-        fetchMyBest("easy"), fetchMyBest("medium"), fetchMyBest("hard")
-      ]);
-      document.getElementById("me-easy").textContent   = meE;
-      document.getElementById("me-medium").textContent = meM;
-      document.getElementById("me-hard").textContent   = meH;
+      renderList(document.getElementById("lb-hard"),   topH);
+
+      // "Moje best:" už v panelu neexistuje → nic nevyplňujeme
     } catch (e) {
       console.error("Render leaderboard selhal:", e);
       renderList(document.getElementById("lb-easy"),   []);
       renderList(document.getElementById("lb-medium"), []);
       renderList(document.getElementById("lb-hard"),   []);
-      document.getElementById("me-easy").textContent   = "—";
-      document.getElementById("me-medium").textContent = "—";
-      document.getElementById("me-hard").textContent   = "—";
     }
   }
 
@@ -273,7 +276,6 @@ html, body, canvas, #game, .hitbox {
       localStorage.setItem(LS, JSON.stringify(bestLocal));
     }
   }
-  // Upsert globálního skóre na základě device_id (volá se při zlepšení)
   async function saveBestGlobal() {
     try {
       const nick = getNick();
@@ -401,11 +403,11 @@ html, body, canvas, #game, .hitbox {
       return;
     }
 
-    // --- NOVÉ: Toggle ŽEBŘÍČKU + Nicku klikem na Score/Best vpravo nahoře ---
+    // Toggle Žebříčku + Nicku klikem na Score/Best vpravo nahoře
     const rightWidth = 180; // šířka od pravého okraje
     const topHeight  = 40;  // výška pokrývající "Score" + "Best"
     if (mx >= W - rightWidth && mx <= W && my >= 10 && my <= 10 + topHeight) {
-      lbBtn?.onclick?.();  // využijeme existující handler
+      toggleLeaderboard();
       return;
     }
 
@@ -472,7 +474,6 @@ html, body, canvas, #game, .hitbox {
   /* =========================
      Veřejné API (volitelné)
   ========================= */
-  // Uložení skóre z jiných částí hry
   window.saveScore = async function (difficulty, newScore) {
     const nick = getNick();
     if (!nick) return;
@@ -500,7 +501,7 @@ html, body, canvas, #game, .hitbox {
     }
   }
 
-  // Volitelně: při startu, pokud je nick už nastaven, zajistíme záznamy
+  // Při startu zajisti záznamy, pokud nick existuje
   (async () => {
     const n = getNick();
     if (n) { try { await ensureAllDifficultiesUpsert(n); } catch {} }
