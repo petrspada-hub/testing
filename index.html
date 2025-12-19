@@ -28,6 +28,10 @@ canvas {
   background:#1e1e1e;
 }
 
+#lbToggle {
+  display:none; /* tlačítko skryté */
+}
+
 #lbPanel {
   position:absolute;
   left:50%;
@@ -41,6 +45,9 @@ canvas {
   padding:12px;
   z-index:30;
   box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+
+#lbPanel.hidden {
   display:none;
 }
 
@@ -120,7 +127,7 @@ li:nth-child(-n+3) .score {
 
   <canvas id="game" width="700" height="300"></canvas>
 
-  <div id="lbPanel" aria-hidden="true">
+  <div id="lbPanel" class="hidden" aria-hidden="true">
 
     <div id="nickRow">
       <input id="nick" type="text" maxlength="20" placeholder="Nick">
