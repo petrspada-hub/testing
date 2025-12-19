@@ -1,23 +1,76 @@
+
 <!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
   <title>CASUA Slicer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css">
+  icon.png
+  style.css
   <style>
+    /* ---- PŮVODNÍ STYL + ÚPRAVY PRO TMAVÉ MEZERY MEZI SLOUPKY ---- */
+
+    /* Základní kontejner UI */
     #ui { width:700px; margin:0 auto; }
+
+    /* Horní lišta */
     #topbar { display:flex; justify-content:space-between; align-items:center; margin:6px 0; }
     #lbToggle { background:#333; color:#fff; border:1px solid #444; padding:4px 8px; cursor:pointer; }
-    #lbPanel { border:1px solid #333; padding:8px; margin-top:6px; }
+
+    /* Panel žebříčku: jeho tmavé pozadí bude barva mezery */
+    #lbPanel { border:1px solid #333; padding:8px; margin-top:6px; background:#121212; }
     #lbPanel.hidden { display:none; }
+
+    /* Řádek s nickem */
     #nickRow { margin-bottom:6px; }
     #nick { width:140px; }
-    .cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-    ul { list-style:none; padding:0; margin:0; }
+
+    /* --- GRID se třemi sloupci: tmavá mezera přes column-gap --- */
+    .cols {
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr; /* tři stejné sloupky */
+      column-gap: 40px;                    /* <<< šířka tmavé mezery mezi sloupky */
+      row-gap: 12px;                       /* případné vertikální mezery uvnitř */
+      align-items: start;
+      /* na mobilu ponecháme stejný layout (tři sloupky vedle sebe) */
+    }
+
+    /* „Kartičky“ jednotlivých sloupců (EASY/MEDIUM/HARD) */
+    .col {
+      background:#1a1a1a;       /* o chlup světlejší než panel (#121212), mezera je vidět */
+      border:1px solid #333;    /* jemný rámeček */
+      border-radius:6px;        /* kulaté rohy (můžeš upravit) */
+      padding:10px;             /* vnitřní odsazení obsahu */
+      box-sizing:border-box;
+      display:grid;             /* kvůli snadnému rozvržení obsahu */
+      grid-auto-rows:min-content;
+    }
+
+    /* Nadpisy v kartičkách (silné písmo) */
+    .col > strong {
+      display:block;
+      margin:4px auto 8px;      /* vycentrování */
+      width:max-content;
+      color:#fff;
+      font-weight:700;
+      text-align:center;
+      letter-spacing:.3px;
+    }
+
+    /* Seznamy a položky */
+    ul { list-style:none; padding:0; margin:0; color:#eee; }
     li { font-size:14px; }
+
+    /* „Moje best“ pod seznamem */
     .me { font-size:13px; color:#aaa; margin-top:4px; }
+
+    /* --- Mobil: stejné rozložení (tři sloupky vedle sebe) --- */
+    @media (max-width: 760px) {
+      .cols {
+        grid-template-columns: 1fr 1fr 1fr; /* stále 3 sloupky */
+        column-gap: 40px;                   /* stejná mezera jako na desktopu */
+      }
+    }
   </style>
 </head>
 
@@ -36,17 +89,19 @@
 
     <div id="lbPanel" class="hidden" aria-hidden="true">
       <div class="cols">
-        <div>
+        <div class="col">
           <strong>EASY</strong>
           <ul id="lb-easy"></ul>
           <div class="me">Moje best: <span id="me-easy">—</span></div>
         </div>
-        <div>
+
+        <div class="col">
           <strong>MEDIUM</strong>
           <ul id="lb-medium"></ul>
           <div class="me">Moje best: <span id="me-medium">—</span></div>
         </div>
-        <div>
+
+        <div class="col">
           <strong>HARD</strong>
           <ul id="lb-hard"></ul>
           <div class="me">Moje best: <span id="me-hard">—</span></div>
@@ -55,6 +110,7 @@
     </div>
   </div>
 
-  <script src="script.js" defer></script>
+  <!-- ponechávám tvůj název skriptu; pokud se jmenuje jinak, uprav -->
+  script.js</script>
 </body>
 </html>
