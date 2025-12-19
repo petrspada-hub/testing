@@ -114,6 +114,7 @@ canvas {
   font-weight: 700;
   text-align: center;         /* explicitně na střed */
   letter-spacing: .3px;
+    justify-self: center;  /* zarovnání nadpisu na střed sloupce */
 }
 
 /* Seznam výsledků – kontejner jako celek centrovaný,
