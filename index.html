@@ -17,34 +17,17 @@ html, body {
   font:14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* obal hry */
 .wrap {
   position:relative;
   width:700px;
 }
 
-/* canvas */
 canvas {
   border:1px solid #333;
   border-radius:8px;
   background:#1e1e1e;
 }
 
-/* tlačítko žebříčku */
-#lbToggle {
-  position:absolute;
-  top:8px;
-  right:8px;
-  z-index:20;
-  padding:6px 10px;
-  background:#282828;
-  color:#fff;
-  border:1px solid #555;
-  border-radius:4px;
-  cursor:pointer;
-}
-
-/* panel žebříčku */
 #lbPanel {
   position:absolute;
   left:50%;
@@ -58,10 +41,9 @@ canvas {
   padding:12px;
   z-index:30;
   box-shadow:0 8px 24px rgba(0,0,0,.35);
-  display:none; /* výchozí stav skrytý */
+  display:none;
 }
 
-/* horní řádek s nickem */
 #nickRow {
   display:flex;
   gap:8px;
@@ -84,19 +66,16 @@ canvas {
   cursor:pointer;
 }
 
-/* grid žebříčku */
 .cols {
   display:grid;
   grid-template-columns:repeat(3, 1fr);
   column-gap:40px;
 }
 
-/* sloupec */
 .col {
   padding:6px;
 }
 
-/* nadpis obtížnosti */
 .col strong {
   display:block;
   margin:4px auto 8px;
@@ -105,7 +84,6 @@ canvas {
   letter-spacing:.3px;
 }
 
-/* seznam */
 ul {
   list-style:none;
   padding:0;
@@ -114,7 +92,6 @@ ul {
 }
 li { margin:2px 0; }
 
-/* řádek skóre */
 .lb-row {
   display:grid;
   grid-template-columns:auto 1fr auto;
@@ -123,7 +100,6 @@ li { margin:2px 0; }
 .rank  { font-weight:700; color:#ffd166; }
 .score { justify-self:end; font-variant-numeric:tabular-nums; }
 
-/* top 3 */
 li:nth-child(-n+3) .name,
 li:nth-child(-n+3) .score {
   font-weight:600;
@@ -141,8 +117,6 @@ li:nth-child(-n+3) .score {
 <body>
 
 <div class="wrap">
-
-  <button id="lbToggle" aria-expanded="false">Žebříček</button>
 
   <canvas id="game" width="700" height="300"></canvas>
 
@@ -174,23 +148,6 @@ li:nth-child(-n+3) .score {
   </div>
 
 </div>
-
-<script>
-const lbToggle = document.getElementById('lbToggle');
-const lbPanel = document.getElementById('lbPanel');
-
-lbToggle.addEventListener('click', () => {
-  if(lbPanel.style.display === 'none') {
-    lbPanel.style.display = 'block';
-    lbToggle.setAttribute('aria-expanded', 'true');
-    lbPanel.setAttribute('aria-hidden', 'false');
-  } else {
-    lbPanel.style.display = 'none';
-    lbToggle.setAttribute('aria-expanded', 'false');
-    lbPanel.setAttribute('aria-hidden', 'true');
-  }
-});
-</script>
 
 <script src="script.js" defer></script>
 </body>
