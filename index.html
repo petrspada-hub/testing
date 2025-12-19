@@ -7,7 +7,6 @@
 <link rel="icon" href="icon.png">
 
 <style>
-/* Základ stránky */
 html, body {
   background: #1e1e1e;
   margin: 0;
@@ -34,17 +33,14 @@ canvas {
 
 /* PANEL ŽEBŘÍČKU */
 .lb-panel {
-  position: fixed;   /* fixní, aby byl nad hrou */
-  top: 50px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;  /* pod canvas */
+  margin-top: 20px;
   width: 680px;
   max-width: 95vw;
-  background: #121212;
+  background: #1e1e1e; /* sladěné s kanvasem */
   border: 1px solid #555;
   border-radius: 8px;
   padding: 10px 12px;
-  z-index: 10000;    /* dostatečně nad hitboxem */
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
 
@@ -87,7 +83,7 @@ canvas {
 
 /* Sloupce */
 .lb-col {
-  background: #1a1a1a;
+  background: #1e1e1e; /* sladěné s kanvasem */
   border: 1px solid #333;
   border-radius: 6px;
   padding: 10px;
@@ -155,7 +151,7 @@ canvas {
   <canvas id="game" width="700" height="300"></canvas>
 </div>
 
-<!-- PANEL ŽEBŘÍČKU mimo wrap -->
+<!-- PANEL ŽEBŘÍČKU pod canvas -->
 <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
   <div class="lb-header">
     <input id="nick" type="text" maxlength="20" placeholder="Nick">
