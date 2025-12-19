@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="cs">
 <head>
@@ -7,220 +6,176 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="icon.png">
 
-  <!-- Základní vzhled stránky -->
-  <style>
-    :root {
-      --bg: #0f0f12;
-      --panel: #17181c;
-      --text: #e9eaef;
-      --muted: #a9adba;
-      --accent: #2b6bf6;
-      --danger: #e24646;
-      --ok: #28a745;
-      --maxw: 860px;
-    }
+<style>
+/* Základ stránky */
+html, body {
+  background: #1e1e1e;
+  margin: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
+/* Kontejner hry */
+.wrap {
+  position: relative;
+  width: 700px;
+}
 
-    .page {
-      max-width: var(--maxw);
-      margin: 24px auto;
-      padding: 0 16px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
+/* Canvas hry */
+canvas {
+  border: 1px solid #333;
+  image-rendering: crisp-edges;
+  border-radius: 8px;
+  background: #1e1e1e;
+}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
+/* PANEL ŽEBŘÍČKU */
+.lb-panel {
+  position: fixed;   /* fixní, aby byl nad hrou */
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 680px;
+  max-width: 95vw;
+  background: #121212;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px 12px;
+  z-index: 10000;    /* dostatečně nad hitboxem */
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
 
-    header h1 {
-      font-size: 20px;
-      margin: 0;
-      font-weight: 600;
-    }
+.lb-panel.hidden {
+  display: none;
+}
 
-    /* Kontejner: canvas nad panelem (klíčové) */
-    #app {
-      display: flex;
-      flex-direction: column; /* nad sebou */
-      align-items: center;
-      gap: 12px;              /* mezera mezi canvasem a žebříčkem */
-    }
+/* Hlavička panelu: nick + uložit */
+.lb-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.lb-header input {
+  flex: 1;
+  padding: 6px 8px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+}
+.lb-header button {
+  padding: 6px 10px;
+  background: #2d6cdf;
+  border: 0;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-    /* Canvas */
-    #game {
-      width: 700px;
-      height: 300px;
-      max-width: 100%;
-      background: #1e1e1e; /* fallback pozadí */
-      display: block;
-    }
+/* GRID: 3 sloupce */
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 40px;
+  row-gap: 12px;
+  align-items: start;
+}
 
-    /* Panel žebříčku */
-    #lbPanel {
-      position: static;            /* nesmí být absolute/fixed */
-      width: 700px;
-      max-width: 100%;
-      background: var(--panel);
-      border: 1px solid #2a2c33;
-      border-radius: 10px;
-      padding: 12px 14px;
-    }
+/* Sloupce */
+.lb-col {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: grid;
+  grid-auto-rows: min-content;
+}
 
-    #lbPanel h2 {
-      font-size: 16px;
-      margin: 0 0 8px 0;
-      font-weight: 600;
-    }
+.lb-col strong {
+  display: block;
+  margin: 4px auto 8px;
+  width: max-content;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: .3px;
+}
 
-    .hidden { display: none !important; }
+/* Seznam výsledků */
+.lb-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #eee;
+  line-height: 1.4;
+  min-height: 3.5em;
+}
 
-    /* Řádek s nickem */
-    #nickRow {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    #nick {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #2a2c33;
-      background: #0f1116;
-      color: var(--text);
-      outline: none;
-    }
-    #saveNick {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #2a2c33;
-      background: #0f1116;
-      color: var(--text);
-      cursor: pointer;
-    }
-    #saveNick:hover { border-color: var(--accent); color: var(--accent); }
+/* Položky */
+.lb-list li { margin: 2px 0; }
 
-    /* Tabulky žebříčku */
-    .lb-sections {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
+/* Řádek: rank | name | score */
+.lb-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  column-gap: 10px;
+  align-items: baseline;
+}
+.lb-row .rank  { font-weight: 700; color: #ffd166; justify-self: start; }
+.lb-row .name  { justify-self: start; }
+.lb-row .score { justify-self: end; font-variant-numeric: tabular-nums; }
 
-    .lb-card {
-      background: #121317;
-      border: 1px solid #2a2c33;
-      border-radius: 8px;
-      padding: 8px;
-    }
+/* TOP 3 */
+.lb-list li:nth-child(-n+3) .name,
+.lb-list li:nth-child(-n+3) .score {
+  font-weight: 600;
+  color: #ffd166;
+}
 
-    .lb-card h3 {
-      font-size: 14px;
-      margin: 0 0 6px 0;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .lb-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .lb-row {
-      display: grid;
-      grid-template-columns: 28px 1fr auto;
-      gap: 6px;
-      padding: 6px 4px;
-      border-radius: 6px;
-    }
-
-    .lb-row .rank {
-      color: var(--muted);
-      text-align: right;
-    }
-    .lb-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lb-row .score { font-feature-settings: "tnum"; }
-
-    /* Horní ovládání (volitelné tlačítko pro otevření žebříčku mimo canvas) */
-    #lbToggle {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #2a2c33;
-      background: #0f1116;
-      color: var(--text);
-      cursor: pointer;
-    }
-    #lbToggle:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* Responsivita */
-    @media (max-width: 640px) {
-      .lb-sections {
-        grid-template-columns: 1fr;
-      }
-      #nickRow {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+/* Mobilní verze */
+@media (max-width: 760px) {
+  .wrap    { width: 96vw; }
+  canvas   { width: 100%; height: auto; }
+  .lb-panel{ width: 96vw; }
+  .lb-grid {
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 40px;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="page">
-    <header>
-      <h1>CASUA Slicer</h1>
-      <!-- Volitelné: tlačítko mimo canvas (skript ho defaultně skryje) -->
-      <button id="lbToggle" type="button" aria-controls="lbPanel" aria-expanded="false">Žebříček</button>
-    </header>
+<div class="wrap">
+  <canvas id="game" width="700" height="300"></canvas>
+</div>
 
-    <main id="app" role="main">
-      <!-- CANVAS HNED NAD PANELem -->
-      <canvas id="game" width="700" height="300" aria-label="Herní plátno"></canvas>
-
-      <!-- PANEL ŽEBŘÍČKU — bude pod canvasem -->
-      <section id="lbPanel" class="hidden" aria-hidden="true" aria-label="Žebříček">
-        <!-- řádek se jménem/nickem -->
-        <div id="nickRow">
-          <input id="nick" type="text" placeholder="Váš nick (ponechte prázdné pro smazání výsledků na tomto zařízení)" />
-          <button id="saveNick" type="button">Uložit nick</button>
-        </div>
-
-        <!-- tři sekce žebříčku -->
-        <div class="lb-sections">
-          <div class="lb-card">
-            <h3>EASY</h3>
-            <ul id="lb-easy" class="lb-list">
-              <!-- plní skript -->
-            </ul>
-          </div>
-          <div class="lb-card">
-            <h3>MEDIUM</h3>
-            <ul id="lb-medium" class="lb-list">
-              <!-- plní skript -->
-            </ul>
-          </div>
-          <div class="lb-card">
-            <h3>HARD</h3>
-            <ul id="lb-hard" class="lb-list">
-              <!-- plní skript -->
-            </ul>
-          </div>
-        </div>
-      </section>
-    </main>
+<!-- PANEL ŽEBŘÍČKU mimo wrap -->
+<div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+  <div class="lb-header">
+    <input id="nick" type="text" maxlength="20" placeholder="Nick">
+    <button id="saveNick">Uložit</button>
   </div>
+  <div class="lb-grid">
+    <div class="lb-col">
+      <strong>EASY</strong>
+      <ul id="lb-easy" class="lb-list"></ul>
+    </div>
+    <div class="lb-col">
+      <strong>MEDIUM</strong>
+      <ul id="lb-medium" class="lb-list"></ul>
+    </div>
+    <div class="lb-col">
+      <strong>HARD</strong>
+      <ul id="lb-hard" class="lb-list"></ul>
+    </div>
+  </div>
+</div>
 
 <script src="script.js" defer></script>
 </body>
