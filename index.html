@@ -17,43 +17,87 @@ html, body {
   font:14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
+/* obal hry */
 .wrap {
   position:relative;
   width:700px;
 }
 
+/* canvas */
 canvas {
   border:1px solid #333;
   border-radius:8px;
   background:#1e1e1e;
 }
 
-.lb-panel {
+/* tlačítko žebříčku */
+#lbToggle {
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:10;
+  padding:6px 10px;
+  background:#282828;
+  color:#fff;
+  border:1px solid #555;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+/* panel žebříčku */
+#lbPanel {
   position:absolute;
   left:50%;
   top:50px;
   transform:translateX(-50%);
   width:680px;
-  background:#121212;            /* <<< tmavé mezery */
+  max-width:95vw;
+  background:#121212;
   border:1px solid #555;
   border-radius:8px;
   padding:12px;
+  z-index:9;
   box-shadow:0 8px 24px rgba(0,0,0,.35);
 }
+#lbPanel.hidden { display:none; }
 
-.lb-grid {
+/* horní řádek s nickem */
+#nickRow {
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+#nickRow input {
+  flex:1;
+  padding:6px 8px;
+  background:#1e1e1e;
+  border:1px solid #444;
+  color:#fff;
+  border-radius:4px;
+}
+#nickRow button {
+  padding:6px 10px;
+  background:#2d6cdf;
+  border:0;
+  color:#fff;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+/* grid žebříčku */
+.cols {
   display:grid;
   grid-template-columns:repeat(3, 1fr);
-  column-gap:40px;               /* <<< souvislá mezera */
-  align-items:start;
+  column-gap:40px;
 }
 
-/* vnitřní obsah sloupce – BEZ pozadí */
-.lb-col {
-  padding:8px 6px;
+/* sloupec */
+.col {
+  padding:6px;
 }
 
-.lb-title {
+/* nadpis obtížnosti */
+.col strong {
   display:block;
   margin:4px auto 8px;
   width:max-content;
@@ -61,24 +105,27 @@ canvas {
   letter-spacing:.3px;
 }
 
-.lb-list {
+/* seznam */
+ul {
   list-style:none;
-  margin:0;
   padding:0;
+  margin:0;
   line-height:1.4;
 }
+li { margin:2px 0; }
 
+/* řádek skóre */
 .lb-row {
   display:grid;
   grid-template-columns:auto 1fr auto;
   column-gap:10px;
 }
+.rank  { font-weight:700; color:#ffd166; }
+.score { justify-self:end; font-variant-numeric:tabular-nums; }
 
-.lb-row .rank  { color:#ffd166; font-weight:700; }
-.lb-row .score { justify-self:end; font-variant-numeric:tabular-nums; }
-
-.lb-list li:nth-child(-n+3) .name,
-.lb-list li:nth-child(-n+3) .score {
+/* top 3 */
+li:nth-child(-n+3) .name,
+li:nth-child(-n+3) .score {
   font-weight:600;
   color:#ffd166;
 }
@@ -86,46 +133,48 @@ canvas {
 @media (max-width:760px) {
   .wrap { width:96vw; }
   canvas { width:100%; height:auto; }
-  .lb-panel { width:96vw; }
+  #lbPanel { width:96vw; }
 }
 </style>
 </head>
 
 <body>
+
 <div class="wrap">
 
-  <canvas width="700" height="300"></canvas>
+  <button id="lbToggle" aria-expanded="false">Žebříček</button>
 
-  <div class="lb-panel">
-    <div class="lb-grid">
+  <canvas id="game" width="700" height="300"></canvas>
 
-      <div class="lb-col">
-        <strong class="lb-title">EASY</strong>
-        <ul class="lb-list">
-          <li class="lb-row"><span class="rank">1</span><span class="name">AAA</span><span class="score">120</span></li>
-          <li class="lb-row"><span class="rank">2</span><span class="name">BBB</span><span class="score">95</span></li>
-        </ul>
+  <div id="lbPanel" class="hidden" aria-hidden="true">
+
+    <div id="nickRow">
+      <input id="nick" type="text" maxlength="20" placeholder="Nick">
+      <button id="saveNick">Uložit</button>
+    </div>
+
+    <div class="cols">
+
+      <div class="col">
+        <strong>EASY</strong>
+        <ul id="lb-easy"></ul>
       </div>
 
-      <div class="lb-col">
-        <strong class="lb-title">MEDIUM</strong>
-        <ul class="lb-list">
-          <li class="lb-row"><span class="rank">1</span><span class="name">CCC</span><span class="score">300</span></li>
-          <li class="lb-row"><span class="rank">2</span><span class="name">DDD</span><span class="score">260</span></li>
-          <li class="lb-row"><span class="rank">3</span><span class="name">EEE</span><span class="score">200</span></li>
-        </ul>
+      <div class="col">
+        <strong>MEDIUM</strong>
+        <ul id="lb-medium"></ul>
       </div>
 
-      <div class="lb-col">
-        <strong class="lb-title">HARD</strong>
-        <ul class="lb-list">
-          <li class="lb-row"><span class="rank">1</span><span class="name">FFF</span><span class="score">800</span></li>
-        </ul>
+      <div class="col">
+        <strong>HARD</strong>
+        <ul id="lb-hard"></ul>
       </div>
 
     </div>
   </div>
 
 </div>
+
+<script src="script.js" defer></script>
 </body>
 </html>
