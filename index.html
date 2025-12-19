@@ -35,7 +35,7 @@ canvas {
   position:absolute;
   top:8px;
   right:8px;
-  z-index:10;
+  z-index:20;
   padding:6px 10px;
   background:#282828;
   color:#fff;
@@ -56,10 +56,10 @@ canvas {
   border:1px solid #555;
   border-radius:8px;
   padding:12px;
-  z-index:9;
+  z-index:30;
   box-shadow:0 8px 24px rgba(0,0,0,.35);
+  display:none; /* výchozí stav skrytý */
 }
-#lbPanel.hidden { display:none; }
 
 /* horní řádek s nickem */
 #nickRow {
@@ -146,7 +146,7 @@ li:nth-child(-n+3) .score {
 
   <canvas id="game" width="700" height="300"></canvas>
 
-  <div id="lbPanel" class="hidden" aria-hidden="true">
+  <div id="lbPanel" aria-hidden="true">
 
     <div id="nickRow">
       <input id="nick" type="text" maxlength="20" placeholder="Nick">
@@ -174,6 +174,23 @@ li:nth-child(-n+3) .score {
   </div>
 
 </div>
+
+<script>
+const lbToggle = document.getElementById('lbToggle');
+const lbPanel = document.getElementById('lbPanel');
+
+lbToggle.addEventListener('click', () => {
+  if(lbPanel.style.display === 'none') {
+    lbPanel.style.display = 'block';
+    lbToggle.setAttribute('aria-expanded', 'true');
+    lbPanel.setAttribute('aria-hidden', 'false');
+  } else {
+    lbPanel.style.display = 'none';
+    lbToggle.setAttribute('aria-expanded', 'false');
+    lbPanel.setAttribute('aria-hidden', 'true');
+  }
+});
+</script>
 
 <script src="script.js" defer></script>
 </body>
