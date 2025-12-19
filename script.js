@@ -122,7 +122,7 @@
         <li class="me" style="margin-top:6px;">
           <div class="lb-row" style="opacity:.95;">
             <span class="rank">${meRank}.</span>
-            <span class="name">${escapeHtml(meRow.nick)} <span style="opacity:.7">(ty)</span></span>
+            <span class="name">${escapeHtml(meRow.nick)}</span>
             <span class="score">${escapeHtml(meRow.score)}</span>
           </div>
         </li>`
@@ -328,3 +328,4 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
   const hitboxParent = c.parentElement ?? document.body;
   hitboxParent.appendChild(hitbox);
 })();
+
