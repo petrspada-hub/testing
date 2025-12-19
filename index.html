@@ -14,12 +14,10 @@ html, body {
   display:grid;
   place-items:center;
   color:#fff;
-  font:14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font:14px system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
 
-.wrap {
-  width:700px;
-}
+.wrap { width:700px; }
 
 /* horní lišta */
 #topbar {
@@ -29,9 +27,7 @@ html, body {
   margin-bottom:6px;
 }
 
-#nickRow input {
-  width:140px;
-}
+#nickRow input { width:140px; }
 
 canvas {
   border:1px solid #333;
@@ -40,7 +36,7 @@ canvas {
   display:block;
 }
 
-/* PANEL ŽEBŘÍČKU – pod hrou, ne absolutně */
+/* panel žebříčku – POD hrou */
 #lbPanel {
   margin-top:10px;
   background:#121212;
@@ -51,26 +47,21 @@ canvas {
 
 #lbPanel.hidden { display:none; }
 
-/* GRID */
+/* grid sloupců */
 .lb-grid {
   display:grid;
-  grid-template-columns:repeat(3, 1fr);
+  grid-template-columns:repeat(3,1fr);
   column-gap:40px;
 }
 
-/* SLOUPEC */
-.lb-col {
-  padding:6px;
-}
+.lb-col { padding:6px; }
 
 .lb-title {
   display:block;
   margin:4px auto 8px;
-  width:max-content;
   font-weight:700;
 }
 
-/* seznam */
 .lb-list {
   list-style:none;
   padding:0;
@@ -102,7 +93,8 @@ canvas {
 
   <canvas id="game" width="700" height="300"></canvas>
 
-  <div id="lbPanel" class="hidden">
+  <!-- VÝCHOZÍ STAV: SKRYTÝ -->
+  <div id="lbPanel" class="hidden" aria-hidden="true">
     <div class="lb-grid">
 
       <div class="lb-col">
