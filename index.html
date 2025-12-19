@@ -1,49 +1,182 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CASUA Slicer</title>
-  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <style>
-    :root { --bg:#111; --panel:#1e1e1e; --text:#fff; --border:#2a2a2a; }
-    html, body { height: 100%; }
-    body { margin:0; background:var(--bg); color:var(--text); font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial; }
-    .page { display:flex; flex-direction:column; align-items:center; gap:24px; padding:16px; }
-    .game-wrap { width:740px; max-width:100%; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; }
-    #game { display:block; width:700px; height:300px; max-width:100%; }
-    #lbPanel { width:740px; max-width:100%; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; }
-    #lbPanel.hidden { display:none; }
-    #nickRow { display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
-    #nick { padding:8px; border-radius:6px; border:1px solid var(--border); background:#121212; color:var(--text); }
-    #saveNick { padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:#3b82f6; color:#fff; cursor:pointer; }
-    .lb-columns { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-    .card { background:#171717; border:1px solid var(--border); border-radius:8px; padding:12px; }
-    .card h3 { margin:0 0 8px; font-size:14px; color:#bbb; letter-spacing:.06em; }
-    .card ul { list-style:none; margin:0; padding:0; }
-    @media (max-width:640px){ .page{padding:8px; gap:16px;} .lb-columns{grid-template-columns:1fr;} #nickRow{grid-template-columns:1fr;} }
-  </style>
+<meta charset="utf-8">
+<title>CASUA Slicer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="icon.png">
+
+<style>
+/* Základ stránky */
+html, body {
+  background: #1e1e1e;
+  margin: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+/* Kontejner hry */
+.wrap {
+  position: relative;
+  width: 700px;
+}
+
+/* Canvas hry */
+canvas {
+  border: 1px solid #333;
+  image-rendering: crisp-edges;
+  border-radius: 8px;
+  background: #1e1e1e;
+}
+
+/* PANEL ŽEBŘÍČKU */
+.lb-panel {
+  position: fixed;   /* fixní, aby byl nad hrou */
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 680px;
+  max-width: 95vw;
+  background: #121212;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px 12px;
+  z-index: 10000;    /* dostatečně nad hitboxem */
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+.lb-panel.hidden {
+  display: none;
+}
+
+/* Hlavička panelu: nick + uložit */
+.lb-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.lb-header input {
+  flex: 1;
+  padding: 6px 8px;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+}
+.lb-header button {
+  padding: 6px 10px;
+  background: #2d6cdf;
+  border: 0;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* GRID: 3 sloupce */
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 40px;
+  row-gap: 12px;
+  align-items: start;
+}
+
+/* Sloupce */
+.lb-col {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: grid;
+  grid-auto-rows: min-content;
+}
+
+.lb-col strong {
+  display: block;
+  margin: 4px auto 8px;
+  width: max-content;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: .3px;
+}
+
+/* Seznam výsledků */
+.lb-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #eee;
+  line-height: 1.4;
+  min-height: 3.5em;
+}
+
+/* Položky */
+.lb-list li { margin: 2px 0; }
+
+/* Řádek: rank | name | score */
+.lb-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  column-gap: 10px;
+  align-items: baseline;
+}
+.lb-row .rank  { font-weight: 700; color: #ffd166; justify-self: start; }
+.lb-row .name  { justify-self: start; }
+.lb-row .score { justify-self: end; font-variant-numeric: tabular-nums; }
+
+/* TOP 3 */
+.lb-list li:nth-child(-n+3) .name,
+.lb-list li:nth-child(-n+3) .score {
+  font-weight: 600;
+  color: #ffd166;
+}
+
+/* Mobilní verze */
+@media (max-width: 760px) {
+  .wrap    { width: 96vw; }
+  canvas   { width: 100%; height: auto; }
+  .lb-panel{ width: 96vw; }
+  .lb-grid {
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 40px;
+  }
+}
+</style>
 </head>
+
 <body>
-  <main class="page">
-    <section class="game-wrap" aria-label="hra">
-      <canvas id="game" width="700" height="300" aria-label="Casua Slicer"></canvas>
-    </section>
+<div class="wrap">
+  <canvas id="game" width="700" height="300"></canvas>
+</div>
 
-    <section id="lbPanel" aria-label="žebříček">
-      <div id="nickRow">
-        <input id="nick" type="text" placeholder="Nick" aria-label="Nick">
-        <button id="saveNick">Uložit</button>
-      </div>
-      <div class="lb-columns">
-        <div class="card"><h3>EASY</h3><ul id="lb-easy"></ul></div>
-        <div class="card"><h3>MEDIUM</h3><ul id="lb-medium"></ul></div>
-        <div class="card"><h3>HARD</h3><ul id="lb-hard"></ul></div>
-      </div>
-    </section>
-  </main>
+<!-- PANEL ŽEBŘÍČKU mimo wrap -->
+<div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+  <div class="lb-header">
+    <input id="nick" type="text" maxlength="20" placeholder="Nick">
+    <button id="saveNick">Uložit</button>
+  </div>
+  <div class="lb-grid">
+    <div class="lb-col">
+      <strong>EASY</strong>
+      <ul id="lb-easy" class="lb-list"></ul>
+    </div>
+    <div class="lb-col">
+      <strong>MEDIUM</strong>
+      <ul id="lb-medium" class="lb-list"></ul>
+    </div>
+    <div class="lb-col">
+      <strong>HARD</strong>
+      <ul id="lb-hard" class="lb-list"></ul>
+    </div>
+  </div>
+</div>
 
-  <!-- Důležité: bez mezer v názvu souboru, kvůli GitHub Pages/URL encodingu -->
-  <script src="script.js"></script>
+<script src="script.js" defer></script>
 </body>
 </html>
