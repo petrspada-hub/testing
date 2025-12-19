@@ -108,6 +108,10 @@ canvas {
 .lb-col {
   text-align: center;         /* sloupec jako celek na střed */
 }
+/* Z .lb-col uděláme grid kontejner */
+.lb-col {
+  display: grid;
+}
 .lb-col h4 {
   margin: 4px 0 8px;
   color: #fff;
@@ -115,6 +119,11 @@ canvas {
   text-align: center;         /* explicitně na střed */
   letter-spacing: .3px;
     justify-self: center;  /* zarovnání nadpisu na střed sloupce */
+}
+/* Nadpisy EASY / MEDIUM / HARD na střed sloupce */
+.lb-col h4 {
+  justify-self: center;
+  text-align: center; /* může zůstat, nijak nevadí */
 }
 
 /* Seznam výsledků – kontejner jako celek centrovaný,
