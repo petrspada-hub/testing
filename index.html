@@ -40,6 +40,10 @@ canvas {
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
 
+.lb-panel.hidden {
+  display: none;
+}
+
 /* Hlavička panelu: nick + uložit */
 .lb-header {
   display: flex;
@@ -142,7 +146,7 @@ canvas {
 <div class="wrap">
   <canvas id="game" width="700" height="300"></canvas>
 
-  <!-- PANEL ŽEBŘÍČKU pod canvas -->
+  <!-- PANEL ŽEBŘÍČKU pod canvas, defaultně skrytý -->
   <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
     <div class="lb-header">
       <input id="nick" type="text" maxlength="20" placeholder="Nick">
