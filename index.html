@@ -4,91 +4,46 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CASUA Slicer</title>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <style>
-    :root {
-      --bg: #111;
-      --panel: #1e1e1e;
-      --text: #fff;
-      --muted: #bbb;
-      --accent: #3b82f6;
-      --border: #2a2a2a;
-    }
+    :root { --bg:#111; --panel:#1e1e1e; --text:#fff; --border:#2a2a2a; }
     html, body { height: 100%; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 16px system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-
-    /* stránka: canvas + panel pod ním */
-    .page { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 16px; }
-
-    /* rám hry */
-    .game-wrap { width: 740px; max-width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-    /* samotný canvas má id "game" – používá ho JS */
-    #game { display: block; width: 700px; height: 300px; max-width: 100%; }
-
-    /* tlačítko pro toggle žebříčku (aktuálně JS ho schovává) */
-    #lbToggle { display: none; }
-
-    /* panel žebříčku hned pod canvasem */
-    #lbPanel { width: 740px; max-width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-    #lbPanel.hidden { display: none; }
-
-    /* řádek s nickem */
-    #nickRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 12px; }
-    #nick, #saveNick { font-size: 14px; }
-    #nick { padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #121212; color: var(--text); }
-    #saveNick { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--accent); color: #fff; cursor: pointer; }
-
-    /* sloupce žebříčků */
-    .lb-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .card { background: #171717; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-    .card h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); letter-spacing: .06em; }
-    .card ul { list-style: none; margin: 0; padding: 0; }
-    .lb-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 6px; align-items: center; font-size: 14px; }
-    .rank { color: var(--muted); }
-    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .score { font-variant-numeric: tabular-nums; }
-
-    @media (max-width: 640px) {
-      .page { padding: 8px; gap: 16px; }
-      .lb-columns { grid-template-columns: 1fr; }
-      #nickRow { grid-template-columns: 1fr; }
-    }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial; }
+    .page { display:flex; flex-direction:column; align-items:center; gap:24px; padding:16px; }
+    .game-wrap { width:740px; max-width:100%; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; }
+    #game { display:block; width:700px; height:300px; max-width:100%; }
+    #lbPanel { width:740px; max-width:100%; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; }
+    #lbPanel.hidden { display:none; }
+    #nickRow { display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
+    #nick { padding:8px; border-radius:6px; border:1px solid var(--border); background:#121212; color:var(--text); }
+    #saveNick { padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:#3b82f6; color:#fff; cursor:pointer; }
+    .lb-columns { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .card { background:#171717; border:1px solid var(--border); border-radius:8px; padding:12px; }
+    .card h3 { margin:0 0 8px; font-size:14px; color:#bbb; letter-spacing:.06em; }
+    .card ul { list-style:none; margin:0; padding:0; }
+    @media (max-width:640px){ .page{padding:8px; gap:16px;} .lb-columns{grid-template-columns:1fr;} #nickRow{grid-template-columns:1fr;} }
   </style>
 </head>
-<body>\n  <main class="page">
+<body>
+  <main class="page">
     <section class="game-wrap" aria-label="hra">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <div style="font-weight:600; color:#fff;">EASY</div>
-        <button id="lbToggle" aria-expanded="true" aria-controls="lbPanel">Žebříček</button>
-        <div style="text-align:right; color:#bbb;">Score: 0<br>Best: 0</div>
-      </div>
       <canvas id="game" width="700" height="300" aria-label="Casua Slicer"></canvas>
     </section>
 
-    <!-- Panel žebříčku hned pod canvasem -->
     <section id="lbPanel" aria-label="žebříček">
-      <!-- Řádek pro zadání/přepsání nicku (JS jej zobrazí/skryje) -->
       <div id="nickRow">
         <input id="nick" type="text" placeholder="Nick" aria-label="Nick">
         <button id="saveNick">Uložit</button>
       </div>
-
       <div class="lb-columns">
-        <div class="card">
-          <h3>EASY</h3>
-          <ul id="lb-easy"></ul>
-        </div>
-        <div class="card">
-          <h3>MEDIUM</h3>
-          <ul id="lb-medium"></ul>
-        </div>
-        <div class="card">
-          <h3>HARD</h3>
-          <ul id="lb-hard"></ul>
-        </div>
+        <div class="card"><h3>EASY</h3><ul id="lb-easy"></ul></div>
+        <div class="card"><h3>MEDIUM</h3><ul id="lb-medium"></ul></div>
+        <div class="card"><h3>HARD</h3><ul id="lb-hard"></ul></div>
       </div>
     </section>
   </main>
 
-  <script src="script (2).js"></script>
+  <!-- Důležité: bez mezer v názvu souboru, kvůli GitHub Pages/URL encodingu -->
+  <script src="script.js"></script>
 </body>
 </html>
