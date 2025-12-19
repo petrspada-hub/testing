@@ -1,60 +1,42 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CASUA Slicer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    #ui { width:700px; margin:0 auto; }
-    #topbar { display:flex; justify-content:space-between; align-items:center; margin:6px 0; }
-    #lbToggle { background:#333; color:#fff; border:1px solid #444; padding:4px 8px; cursor:pointer; }
-    #lbPanel { border:1px solid #333; padding:8px; margin-top:6px; }
-    #lbPanel.hidden { display:none; }
-    #nickRow { margin-bottom:6px; }
-    #nick { width:140px; }
-    .cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-    ul { list-style:none; padding:0; margin:0; }
-    li { font-size:14px; }
-    .me { font-size:13px; color:#aaa; margin-top:4px; }
-  </style>
+  <link rel="stylesheet" href="style (2).css">
 </head>
-
 <body>
-  <div id="ui">
+  <div class="wrap">
     <div id="topbar">
-      <div id="nickRow">
-        Nick:
-        <input id="nick" type="text" maxlength="20">
+      <button id="lbToggle" class="lb-toggle" aria-expanded="false">Žebříček</button>
+    </div>
+    <canvas id="game" width="700" height="300" aria-label="CASUA Slicer"></canvas>
+
+    <div id="lbPanel" class="lb-panel hidden" aria-hidden="true">
+      <div class="lb-header" id="nickRow">
+        <input id="nick" type="text" placeholder="Nick">
         <button id="saveNick">Uložit</button>
       </div>
-      <button id="lbToggle" aria-expanded="false">Žebříček</button>
-    </div>
 
-    <canvas id="game" width="700" height="300"></canvas>
-
-    <div id="lbPanel" class="hidden" aria-hidden="true">
-      <div class="cols">
-        <div>
-          <strong>EASY</strong>
-          <ul id="lb-easy"></ul>
-          <div class="me">Moje best: <span id="me-easy">—</span></div>
+      <div class="lb-grid">
+        <div class="lb-col">
+          <strong class="lb-title">EASY</strong>
+          <ul id="lb-easy" class="lb-list"></ul>
         </div>
-        <div>
-          <strong>MEDIUM</strong>
-          <ul id="lb-medium"></ul>
-          <div class="me">Moje best: <span id="me-medium">—</span></div>
+        <div class="lb-col">
+          <strong class="lb-title">MEDIUM</strong>
+          <ul id="lb-medium" class="lb-list"></ul>
         </div>
-        <div>
-          <strong>HARD</strong>
-          <ul id="lb-hard"></ul>
-          <div class="me">Moje best: <span id="me-hard">—</span></div>
+        <div class="lb-col">
+          <strong class="lb-title">HARD</strong>
+          <ul id="lb-hard" class="lb-list"></ul>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="script.js" defer></script>
+  <script src="script (1).js"></script>
 </body>
 </html>
