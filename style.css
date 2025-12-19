@@ -50,7 +50,7 @@ canvas {
 .lb-panel {
   position: absolute;
   left: 50%;
-  top: 50px;
+  top: 0;
   transform: translateX(-50%);
   width: 680px;
   max-width: 95vw;
