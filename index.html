@@ -1,116 +1,131 @@
-
 <!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8" />
-  <title>CASUA Slicer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  icon.png
-  style.css
-  <style>
-    /* ---- PŮVODNÍ STYL + ÚPRAVY PRO TMAVÉ MEZERY MEZI SLOUPKY ---- */
+<meta charset="utf-8">
+<title>CASUA Slicer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="icon.png">
 
-    /* Základní kontejner UI */
-    #ui { width:700px; margin:0 auto; }
+<style>
+html, body {
+  background:#1e1e1e;
+  margin:0;
+  height:100%;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  font:14px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
 
-    /* Horní lišta */
-    #topbar { display:flex; justify-content:space-between; align-items:center; margin:6px 0; }
-    #lbToggle { background:#333; color:#fff; border:1px solid #444; padding:4px 8px; cursor:pointer; }
+.wrap {
+  position:relative;
+  width:700px;
+}
 
-    /* Panel žebříčku: jeho tmavé pozadí bude barva mezery */
-    #lbPanel { border:1px solid #333; padding:8px; margin-top:6px; background:#121212; }
-    #lbPanel.hidden { display:none; }
+canvas {
+  border:1px solid #333;
+  border-radius:8px;
+  background:#1e1e1e;
+}
 
-    /* Řádek s nickem */
-    #nickRow { margin-bottom:6px; }
-    #nick { width:140px; }
+.lb-panel {
+  position:absolute;
+  left:50%;
+  top:50px;
+  transform:translateX(-50%);
+  width:680px;
+  background:#121212;            /* <<< tmavé mezery */
+  border:1px solid #555;
+  border-radius:8px;
+  padding:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
 
-    /* --- GRID se třemi sloupci: tmavá mezera přes column-gap --- */
-    .cols {
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr; /* tři stejné sloupky */
-      column-gap: 40px;                    /* <<< šířka tmavé mezery mezi sloupky */
-      row-gap: 12px;                       /* případné vertikální mezery uvnitř */
-      align-items: start;
-      /* na mobilu ponecháme stejný layout (tři sloupky vedle sebe) */
-    }
+.lb-grid {
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  column-gap:40px;               /* <<< souvislá mezera */
+  align-items:start;
+}
 
-    /* „Kartičky“ jednotlivých sloupců (EASY/MEDIUM/HARD) */
-    .col {
-      background:#1a1a1a;       /* o chlup světlejší než panel (#121212), mezera je vidět */
-      border:1px solid #333;    /* jemný rámeček */
-      border-radius:6px;        /* kulaté rohy (můžeš upravit) */
-      padding:10px;             /* vnitřní odsazení obsahu */
-      box-sizing:border-box;
-      display:grid;             /* kvůli snadnému rozvržení obsahu */
-      grid-auto-rows:min-content;
-    }
+/* vnitřní obsah sloupce – BEZ pozadí */
+.lb-col {
+  padding:8px 6px;
+}
 
-    /* Nadpisy v kartičkách (silné písmo) */
-    .col > strong {
-      display:block;
-      margin:4px auto 8px;      /* vycentrování */
-      width:max-content;
-      color:#fff;
-      font-weight:700;
-      text-align:center;
-      letter-spacing:.3px;
-    }
+.lb-title {
+  display:block;
+  margin:4px auto 8px;
+  width:max-content;
+  font-weight:700;
+  letter-spacing:.3px;
+}
 
-    /* Seznamy a položky */
-    ul { list-style:none; padding:0; margin:0; color:#eee; }
-    li { font-size:14px; }
+.lb-list {
+  list-style:none;
+  margin:0;
+  padding:0;
+  line-height:1.4;
+}
 
-    /* „Moje best“ pod seznamem */
-    .me { font-size:13px; color:#aaa; margin-top:4px; }
+.lb-row {
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  column-gap:10px;
+}
 
-    /* --- Mobil: stejné rozložení (tři sloupky vedle sebe) --- */
-    @media (max-width: 760px) {
-      .cols {
-        grid-template-columns: 1fr 1fr 1fr; /* stále 3 sloupky */
-        column-gap: 40px;                   /* stejná mezera jako na desktopu */
-      }
-    }
-  </style>
+.lb-row .rank  { color:#ffd166; font-weight:700; }
+.lb-row .score { justify-self:end; font-variant-numeric:tabular-nums; }
+
+.lb-list li:nth-child(-n+3) .name,
+.lb-list li:nth-child(-n+3) .score {
+  font-weight:600;
+  color:#ffd166;
+}
+
+@media (max-width:760px) {
+  .wrap { width:96vw; }
+  canvas { width:100%; height:auto; }
+  .lb-panel { width:96vw; }
+}
+</style>
 </head>
 
 <body>
-  <div id="ui">
-    <div id="topbar">
-      <div id="nickRow">
-        Nick:
-        <input id="nick" type="text" maxlength="20">
-        <button id="saveNick">Uložit</button>
+<div class="wrap">
+
+  <canvas width="700" height="300"></canvas>
+
+  <div class="lb-panel">
+    <div class="lb-grid">
+
+      <div class="lb-col">
+        <strong class="lb-title">EASY</strong>
+        <ul class="lb-list">
+          <li class="lb-row"><span class="rank">1</span><span class="name">AAA</span><span class="score">120</span></li>
+          <li class="lb-row"><span class="rank">2</span><span class="name">BBB</span><span class="score">95</span></li>
+        </ul>
       </div>
-      <button id="lbToggle" aria-expanded="false">Žebříček</button>
-    </div>
 
-    <canvas id="game" width="700" height="300"></canvas>
-
-    <div id="lbPanel" class="hidden" aria-hidden="true">
-      <div class="cols">
-        <div class="col">
-          <strong>EASY</strong>
-          <ul id="lb-easy"></ul>
-          <div class="me">Moje best: <span id="me-easy">—</span></div>
-        </div>
-
-        <div class="col">
-          <strong>MEDIUM</strong>
-          <ul id="lb-medium"></ul>
-          <div class="me">Moje best: <span id="me-medium">—</span></div>
-        </div>
-
-        <div class="col">
-          <strong>HARD</strong>
-          <ul id="lb-hard"></ul>
-          <div class="me">Moje best: <span id="me-hard">—</span></div>
-        </div>
+      <div class="lb-col">
+        <strong class="lb-title">MEDIUM</strong>
+        <ul class="lb-list">
+          <li class="lb-row"><span class="rank">1</span><span class="name">CCC</span><span class="score">300</span></li>
+          <li class="lb-row"><span class="rank">2</span><span class="name">DDD</span><span class="score">260</span></li>
+          <li class="lb-row"><span class="rank">3</span><span class="name">EEE</span><span class="score">200</span></li>
+        </ul>
       </div>
+
+      <div class="lb-col">
+        <strong class="lb-title">HARD</strong>
+        <ul class="lb-list">
+          <li class="lb-row"><span class="rank">1</span><span class="name">FFF</span><span class="score">800</span></li>
+        </ul>
+      </div>
+
     </div>
   </div>
 
-  <!-- ponechávám tvůj název skriptu; pokud se jmenuje jinak, uprav -->
-  script.js</script>
+</div>
 </body>
 </html>
