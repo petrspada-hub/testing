@@ -284,12 +284,34 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
     if(mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih){ triggerSlice(); }
   }
 
-  hitbox.addEventListener("pointerdown", e=>{ e.preventDefault(); const r = c.getBoundingClientRect(); handle(e.clientX - r.left, e.clientY - r.top); });
-  hitbox.addEventListener("click", e=> { e.preventDefault(); e.stopPropagation(); }, { capture:true });
-  hitbox.addEventListener("pointermove", e=>{
-    if(e.pointerType === 'touch') return;
-    const r = c.getBoundingClientRect(); const mx = e.clientX - r.left; const my = e.clientY - r.top;
-    const overImage = (mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih);
+
+  hitbox.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    const r = c.getBoundingClientRect();
+    const scaleX = c.width / r.width;
+    const scaleY = c.height / r.height;
+    const mx = (e.clientX - r.left) * scaleX;
+    const my = (e.clientY - r.top) * scaleY;
+    handle(mx, my);
+  });
+  hitbox.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { capture: true });
+  hitbox.addEventListener("pointermove", e => {
+    if (e.pointerType === "touch") return;
+
+    const r = c.getBoundingClientRect();
+    const scaleX = c.width / r.width;
+    const scaleY = c.height / r.height;
+
+    const mx = (e.clientX - r.left) * scaleX;
+    const my = (e.clientY - r.top) * scaleY;
+
+    const overImage =
+      mx >= ix && mx <= ix + iw &&
+      my >= iy && my <= iy + ih;
+
     hitbox.style.cursor = overImage ? "pointer" : "default";
   });
 
