@@ -163,7 +163,7 @@ canvas {
   /* ✅ JEDINÁ PODSTATNÁ ZMĚNA:
      zmenšení fontu jen na mobilu */
   .lb-panel {
-    font-size: 12px;
+    font-size: 8px;
   }
 
   .lb-col strong {
