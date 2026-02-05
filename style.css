@@ -1,5 +1,7 @@
 /* Základ stránky */
 html, body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background: #1e1e1e;
   margin: 0;
   height: 100%;
