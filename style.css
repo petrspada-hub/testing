@@ -1,7 +1,5 @@
 /* Základ stránky */
 html, body {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
   background: #1e1e1e;
   margin: 0;
   height: 100%;
@@ -158,14 +156,24 @@ canvas {
 
 /* === MOBIL === */
 @media (max-width: 760px) {
-  .wrap     { width: 96vw; }
-  canvas    { width: 100%; height: auto; }
-  .lb-panel { width: 96vw; }
+  /* vypnutí automatického zvětšování textu na mobilech (iOS / Android) */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 
-  /* ✅ JEDINÁ PODSTATNÁ ZMĚNA:
-     zmenšení fontu jen na mobilu */
+  .wrap {
+    width: 96vw;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+  }
+
   .lb-panel {
-    font-size: 8px !important;
+    width: 96vw;
+    font-size: 8px !important; 
   }
 
   .lb-col strong {
