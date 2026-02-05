@@ -156,7 +156,6 @@ canvas {
 
 /* === MOBIL === */
 @media (max-width: 760px) {
-  /* vypnutí automatického zvětšování textu na mobilech (iOS / Android) */
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -171,12 +170,13 @@ canvas {
     height: auto;
   }
 
-  .lb-panel {
-    width: 96vw;
-    font-size: 8px !important; 
+  /* ✅ PŘÍMO CÍLÍME NA OBSAH ŽEBŘÍČKU */
+  #lbPanel .lb-row,
+  #lbPanel .lb-row span {
+    font-size: 8px !important;
   }
 
-  .lb-col strong {
+  #lbPanel strong {
     font-size: 9px !important;
   }
 }
