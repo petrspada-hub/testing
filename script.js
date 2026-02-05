@@ -91,7 +91,14 @@
     lbPanel.setAttribute("aria-hidden", nowHidden.toString());
     lbBtn?.setAttribute("aria-expanded", (!nowHidden).toString());
     setNickVisible(!nowHidden);
-    if (!nowHidden) renderLeaderboard();
+
+    if (!nowHidden) {
+      // ✅ škálování fontu žebříčku podle canvasu
+      const fs = scaleFont(14);   // původně bylo 14px
+      lbPanel.style.fontSize = fs + "px";
+
+      renderLeaderboard();
+    }
   }
   if (lbBtn) lbBtn.onclick = toggleLeaderboard;
 
@@ -235,7 +242,7 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
   function scaleFont(px) {
     const r = c.getBoundingClientRect();
     const scale = r.width / W;   // W = 700
-    return Math.max(8, Math.round(px * scale));
+    return Math.max(12, Math.round(px * scale));
   }
   
   function drawText(t,xp,yp,col="#fff",s=18,a="left"){
