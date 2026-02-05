@@ -232,8 +232,18 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
     catch(e) { console.error("Save global score failed:", e); }
   }
 
+  function scaleFont(px) {
+    const r = c.getBoundingClientRect();
+    const scale = r.width / W;   // W = 700
+    return Math.max(8, Math.round(px * scale));
+  }
+  
   function drawText(t,xp,yp,col="#fff",s=18,a="left"){
-    x.font = `${s}px system-ui,-apple-system,Segoe UI,Roboto,Arial`; x.textBaseline = "top"; x.textAlign = a; x.fillStyle = col; x.fillText(t,xp,yp);
+    x.font = `${scaleFont(s)}px system-ui,-apple-system,Segoe UI,Roboto,Arial`;
+    x.textBaseline = "top";
+    x.textAlign = a;
+    x.fillStyle = col;
+    x.fillText(t,xp,yp);
   }
   function drawLine(y,col,w=2){ x.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`; x.lineWidth=w; x.beginPath(); x.moveTo(ix,y); x.lineTo(ix+iw,y); x.stroke(); }
   function clamp(v,l,h){ return Math.max(l, Math.min(h, v)); }
@@ -350,4 +360,5 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
   const hitboxParent = c.parentElement ?? document.body;
   hitboxParent.appendChild(hitbox);
 })();
+
 
