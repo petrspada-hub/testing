@@ -363,17 +363,17 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
             const hx = ix + Math.floor(iw * 0.69);
             const hy = iy + Math.floor(ih * 0.2);
 
-            const hs = 70; // velikost hlavy
+            const hs = 80; // velikost hlavy
             
             // Posuv hlavy (0 = dole schovaná)
-            const offset = (1 - headSlide) * 70;
+            const offset = (1 - headSlide) * 100;
 
             // Clipping mask — jen nad čárou řezu se ukáže hlava
             x.save();
             x.beginPath();
 
             // maska: místo, kde se má hlava ukázat (horní část vajíčka)
-            x.rect(ix, iy - 30, iw, Math.floor(ih * 0.33)+30);   // uprav podle výšky vajíčka
+            x.rect(ix, iy - 40, iw, Math.floor(ih * 0.33)+40);   // uprav podle výšky vajíčka
             x.clip();
 
             
