@@ -360,10 +360,10 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
 
         // >>> HEAD FEATURE — vykreslení hlavy s animací vysouvání
         if (headVisible && head.complete) {
-            const hx = ix + Math.floor(iw * 0.80);
-            const hy = iy + Math.floor(ih * 0.66);
+            const hx = ix + Math.floor(iw * 0.70);
+            const hy = iy + Math.floor(ih * 0.33);
             
-            const hs = 50; // velikost hlavy
+            const hs = 100; // velikost hlavy
 
             // kolik je hlava vysunutá: 0 = schovaná, 1 = venku
             const offset = (1 - headSlide) * 40;   // 40 px směrem dolů
