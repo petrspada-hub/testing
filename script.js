@@ -366,7 +366,7 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
             const hs = 80; // velikost hlavy
             
             // Posuv hlavy (0 = dole schovaná)
-            const offset = (1 - headSlide) * 100;
+            const offset = (1 - headSlide) * 60;
 
             // Clipping mask — jen nad čárou řezu se ukáže hlava
             x.save();
