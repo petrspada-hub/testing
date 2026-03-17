@@ -362,13 +362,23 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
         if (headVisible && head.complete) {
             const hx = ix + Math.floor(iw * 0.69);
             const hy = iy + Math.floor(ih * 0.3);
-            
-            const hs = 60; // velikost hlavy
 
-            // kolik je hlava vysunutá: 0 = schovaná, 1 = venku
-            const offset = (1 - headSlide) * 60;   // 60 px směrem dolů
+            const hs = 70; // velikost hlavy
+            
+            // Posuv hlavy (0 = dole schovaná)
+            const offset = (1 - headSlide) * 70;
+
+            // Clipping mask — jen nad čárou řezu se ukáže hlava
+            x.save();
+            x.beginPath();
+
+            // maska: místo, kde se má hlava ukázat (horní část vajíčka)
+            x.rect(ix, iy, iw, Math.floor(ih * 0.50));   // uprav podle výšky vajíčka
+            x.clip();
+
             
             x.drawImage(head, hx - hs / 2, hy - hs / 2 + offset, hs, hs);
+            x.restore();
         }
     }
 
