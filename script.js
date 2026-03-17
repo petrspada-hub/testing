@@ -373,7 +373,7 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
             x.beginPath();
 
             // maska: místo, kde se má hlava ukázat (horní část vajíčka)
-            x.rect(ix, iy, iw, Math.floor(ih * 0.33));   // uprav podle výšky vajíčka
+            x.rect(ix, iy, iw, Math.floor(ih * 0.8));   // uprav podle výšky vajíčka
             x.clip();
 
             
