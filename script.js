@@ -308,34 +308,32 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
 
     function update() {
 
-        // pohyb řezací čáry
-        if (cut === null) {
-            ly += spd * dir;
-            if (ly <= iy) { ly = iy; dir = 1; }
-            if (ly >= iy + ih) { ly = iy + ih; dir = -1; }
-        }
-
-        // >>> HEAD FEATURE — animace vysouvání hlavy (0–1)
-        if (headVisible) {
-            headAnim = Math.min(1, headAnim + 0.05);   // HEAD_SPEED
-        } else {
-            headAnim = Math.max(0, headAnim - 0.05);
-        }
+    if (cut === null) {
+        ly += spd * dir;
+        if (ly <= iy) { ly = iy; dir = 1; }
+        if (ly >= iy + ih) { ly = iy + ih; dir = -1; }
     }
 
-    function render() {
+    // >>> HEAD FEATURE — animace vysouvání hlavy
+    if (headSliding) {
+        headSlide += 0.05;
+        if (headSlide >= 1) {
+            headSlide = 1;
+            headSliding = false;
+        }
+    }
+}
 
+    function render() {
         x.fillStyle = "#1e1e1e";
         x.fillRect(0, 0, W, H);
 
-        // vykreslení obrázku (celý / oříznutý podle řezu)
         if (cut === null) {
             x.drawImage(img, ix, iy, iw, ih);
         } else {
             const srcH = img.naturalHeight;
             const scale = ih / srcH;
             const realCut = Math.round(cut / scale);
-
             x.drawImage(
                 img,
                 0, realCut,
@@ -345,14 +343,12 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
             );
         }
 
-        // řezací linka
         if (cut === null) {
             const step = Math.trunc((spd - base) / 0.5);
             const idx = clamp(co + step, 0, colors.length - 1);
             drawLine(Math.round(ly), colors[idx], 2);
         }
 
-        // texty
         drawText(mode.toUpperCase(), 10, 10, "#fff", 16, "left");
         drawText(`Score: ${score}`, W - 10, 10, "#fff", 16, "right");
         drawText(`Best: ${bestLocal[mode]}`, W - 10, 28, "#fff", 16, "right");
@@ -362,31 +358,20 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
         else if (cut !== null)
             drawText(hit ? "PERFECT!" : "FAIL!", W / 2, 10, hit ? "#0f0" : "#f00", 20, "center");
 
+        // >>> HEAD FEATURE — vykreslení hlavy s animací vysouvání
+        if (headVisible && head.complete) {
+            const hx = ix + Math.floor(iw * 0.69);
+            const hy = iy + Math.floor(ih * 0.3);
+            
+            const hs = 60; // velikost hlavy
 
-
-        // >>> HEAD FEATURE — přesné vysouvání hlavy přímo z řezu
-
-        if (headAnim > 0 && head.complete && cut !== null) {
-
-            const HEAD_X_RATIO = 0.80;   // horizontální poloha hlavy
-            const HEAD_Y_FROM_CUT = -80; // vertikální vysunutí od řezu (záporné = nahoru)
-            const HEAD_SIZE = 80;        // velikost hlavy
-
-            // přesná Y pozice řezu v canvasu
-            const cutY = iy + cut;
-
-            // cílový X bod
-            const hx = ix + Math.floor(iw * HEAD_X_RATIO);
-
-            // ANIMACE POSUNEM (žádné zvětšování!)
-            // headAnim: 0 = přesně v řezu, 1 = cílová poloha
-            const hy = cutY + HEAD_Y_FROM_CUT * headAnim;
-
-            // vykreslení (zarovnání na střed)
-            x.drawImage(head, hx - HEAD_SIZE / 2, hy - HEAD_SIZE, HEAD_SIZE, HEAD_SIZE);
+            // kolik je hlava vysunutá: 0 = schovaná, 1 = venku
+            const offset = (1 - headSlide) * 60;   // 60 px směrem dolů
+            
+            x.drawImage(head, hx - hs / 2, hy - hs / 2 + offset, hs, hs);
         }
     }
-    
+
     function loop() { update(); render(); requestAnimationFrame(loop); }
 
     async function triggerSlice() {
