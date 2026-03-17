@@ -361,7 +361,7 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
         // >>> HEAD FEATURE — vykreslení hlavy s animací vysouvání
         if (headVisible && head.complete) {
             const hx = ix + Math.floor(iw * 0.69);
-            const hy = iy + Math.floor(ih * 0.05);
+            const hy = iy + Math.floor(ih * 0.1);
 
             const hs = 80; // velikost hlavy
             
