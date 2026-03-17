@@ -361,12 +361,12 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
         // >>> HEAD FEATURE — vykreslení hlavy s animací vysouvání
         if (headVisible && head.complete) {
             const hx = ix + Math.floor(iw * 0.69);
-            const hy = iy + Math.floor(ih * 0.2);
+            const hy = iy + Math.floor(ih * 0.4);
 
             const hs = 80; // velikost hlavy
             
             // Posuv hlavy (0 = dole schovaná)
-            const offset = (1 - headSlide) * 60;
+            const offset = (1 - headSlide) * 80;
 
             // Clipping mask — jen nad čárou řezu se ukáže hlava
             x.save();
