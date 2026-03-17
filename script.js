@@ -1,4 +1,3 @@
-
 (() => {
   const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
   const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxamZ3Y3NydWdvcG1vdHR3bXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTMyMjIsImV4cCI6MjA4MTQyOTIyMn0.OztHP1F8II2zSKJb1biDqKs1xvO6Z8rWYsI2WSK8St8";
@@ -18,9 +17,8 @@
     return { body, headers: r.headers };
   }
   async function sbCount(path) {
-    // vrací total z Content-Range ("0-xx/COUNT")
     const { headers } = await sbGetWithMeta(path, { headers: { Prefer: "count=exact" } });
-    const cr = headers.get("content-range"); // např. "0-9/123"
+    const cr = headers.get("content-range");
     const total = cr && cr.includes("/") ? parseInt(cr.split("/")[1], 10) : NaN;
     return Number.isFinite(total) ? total : 0;
   }
@@ -91,14 +89,7 @@
     lbPanel.setAttribute("aria-hidden", nowHidden.toString());
     lbBtn?.setAttribute("aria-expanded", (!nowHidden).toString());
     setNickVisible(!nowHidden);
-
-    if (!nowHidden) {
-      // ✅ škálování fontu žebříčku podle canvasu
-      const fs = scaleFont(14);   // původně bylo 14px
-      lbPanel.style.fontSize = fs + "px";
-
-      renderLeaderboard();
-    }
+    if (!nowHidden) renderLeaderboard();
   }
   if (lbBtn) lbBtn.onclick = toggleLeaderboard;
 
@@ -106,22 +97,19 @@
     return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
   }
 
-  // === ŽEBŘÍČEK – render s „mojí“ řádkou pod TOP 3 ===
   function renderList(el, rows, meRow = null, meRank = null) {
     if (!rows.length && !meRow) {
       el.innerHTML = "<li><div class=\"lb-row\"><span class=\"name\">—</span><span class=\"score\"></span></div></li>";
       return;
     }
-    const base = rows
-      .map((r, i) => `
+    const base = rows.map((r, i) => `
         <li>
           <div class="lb-row">
             <span class="rank">${i + 1}.</span>
             <span class="name">${escapeHtml(r.nick)}</span>
             <span class="score">${escapeHtml(r.score)}</span>
           </div>
-        </li>`)
-      .join("");
+        </li>`).join("");
 
     const me =
       (meRow && Number.isFinite(meRank) && meRank > 3)
@@ -146,7 +134,6 @@
     return rows?.[0] ?? null;
   }
   async function fetchMyRank(diff, myScore) {
-    // Rank = počet přísně vyšších + 1
     const greater = await sbCount(`/rest/v1/scores?difficulty=eq.${diff}&score=gt.${encodeURIComponent(myScore)}&select=score`);
     return greater + 1;
   }
@@ -154,7 +141,6 @@
   async function renderLeaderboard() {
     try {
       const [topE, topM, topH] = await Promise.all([fetchTop("easy"), fetchTop("medium"), fetchTop("hard")]);
-
       const [meE, meM, meH] = await Promise.all([fetchMeRow("easy"), fetchMeRow("medium"), fetchMeRow("hard")]);
 
       const [rankE, rankM, rankH] = await Promise.all([
@@ -163,15 +149,12 @@
         meH ? fetchMyRank("hard", meH.score) : Promise.resolve(null),
       ]);
 
-      renderList(document.getElementById("lb-easy"),   topE, meE, rankE);
+      renderList(document.getElementById("lb-easy"), topE, meE, rankE);
       renderList(document.getElementById("lb-medium"), topM, meM, rankM);
-      renderList(document.getElementById("lb-hard"),   topH, meH, rankH);
+      renderList(document.getElementById("lb-hard"), topH, meH, rankH);
 
     } catch(e) {
       console.error("Render leaderboard failed:", e);
-      renderList(document.getElementById("lb-easy"),   []);
-      renderList(document.getElementById("lb-medium"), []);
-      renderList(document.getElementById("lb-hard"),   []);
     }
   }
 
@@ -181,40 +164,20 @@
   const img = new Image();
   img.src = "obrazek.png";
 
-  (function(){
-    const css = `
-html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) !important; -webkit-user-select: none !important; user-select: none !important; outline: none !important; }
-.hitbox { position: absolute; background: transparent; touch-action: none; -webkit-touch-callout: none; z-index: 9999; }
+  const headImg = new Image();
+  headImg.src = "head.png";
 
-/* Jemné styly žebříčku (volitelné) */
-#lbPanel li.me .lb-row { background: rgba(255,255,255,.06); border-radius: 6px; padding: 2px 6px; }
-#lbPanel .lb-row .rank { width: 2.5em; display:inline-block; opacity:.8; }
-#lbPanel .lb-row .name { margin-right: .5em; }
-`;
-    const style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
-  })();
-
-  const hitbox = document.createElement('div');
-  hitbox.className = 'hitbox';
-  const parent = c.parentElement ?? document.body;
-  const ps = getComputedStyle(parent);
-  if (ps.position === 'static') parent.style.position = 'relative';
-  c.setAttribute('tabindex', '-1');
-  c.style.outline = 'none';
-  c.style.userSelect = 'none';
-  c.style.webkitUserSelect = 'none';
-  c.style.webkitTapHighlightColor = 'rgba(0,0,0,0)';
-  c.style.touchAction = 'none';
-  c.addEventListener('contextmenu', e => e.preventDefault());
-  parent.appendChild(hitbox);
+  let lastSliceTime = 0;
+  let showHead = false;
+  let headOffset = 0;
+  const HEAD_DELAY = 800;
+  const HEAD_MAX = 40;
+  const HEAD_SPEED = 2;
 
   const colors = [[0,255,255],[0,255,0],[255,255,0],[255,127,0],[255,0,0],[255,0,255],[127,0,255],[0,0,255]];
   const modes = ["easy","medium","hard"];
   let mi = 0, mode = modes[mi];
   const diff = { easy:{ tolerancePct:0.10, speed:1, acc:0.05 }, medium:{ tolerancePct:0.05, speed:2, acc:0.125 }, hard:{ tolerancePct:0.025, speed:3, acc:0.25 } };
-  const LS = "CasuaSlicerBest";
-  let bestLocal = { easy:0, medium:0, hard:0 };
-  try { const s = JSON.parse(localStorage.getItem(LS)); if (s && typeof s === "object") bestLocal = { ...bestLocal, ...s }; } catch {}
 
   let iw=0, ih=0, ix=0, iy=100;
   let SV=0, TOL=0, base=0, spd=0, co=0;
@@ -227,145 +190,121 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
     co = base - 1;
     TOL = Math.floor(ih * d.tolerancePct);
   }
-  function reset(full=false){
-    cut = null; hit = false; ly = iy; dir = 1;
-    if(full){ score = 0; first = true; spd = base - diff[mode].acc; }
-  }
-  function saveBestLocal(){
-    if (score > bestLocal[mode]) { bestLocal[mode] = score; localStorage.setItem(LS, JSON.stringify(bestLocal)); }
-  }
-  async function saveBestGlobal() {
-    try { const nick = getNick(); if (!nick) return; await sbUpsert({ device_id: DEVICE_ID, nick, difficulty: mode, score }); }
-    catch(e) { console.error("Save global score failed:", e); }
-  }
 
-  function scaleFont(px) {
-    const r = c.getBoundingClientRect();
-    const scale = r.width / W;   // W = 700
-    return Math.max(12, Math.round(px * scale));
+  function reset(full=false){
+    cut = null;
+    hit = false;
+    showHead = false;
+    headOffset = 0;
+    ly = iy;
+    dir = 1;
+    if(full){
+      score = 0;
+      first = true;
+      spd = base - diff[mode].acc;
+    }
   }
-  
-  function drawText(t,xp,yp,col="#fff",s=18,a="left"){
-    x.font = `${scaleFont(s)}px system-ui,-apple-system,Segoe UI,Roboto,Arial`;
-    x.textBaseline = "top";
-    x.textAlign = a;
-    x.fillStyle = col;
-    x.fillText(t,xp,yp);
-  }
-  function drawLine(y,col,w=2){ x.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`; x.lineWidth=w; x.beginPath(); x.moveTo(ix,y); x.lineTo(ix+iw,y); x.stroke(); }
-  function clamp(v,l,h){ return Math.max(l, Math.min(h, v)); }
 
   function update(){
-    if(cut===null){ ly += spd * dir; if(ly <= iy){ ly = iy; dir = 1; } if(ly >= iy+ih){ ly = iy+ih; dir = -1; } }
+    if(cut===null){
+      ly += spd * dir;
+      if(ly <= iy){ ly = iy; dir = 1; }
+      if(ly >= iy+ih){ ly = iy+ih; dir = -1; }
+    }
+
+    if (cut !== null && hit) {
+      if (performance.now() - lastSliceTime > HEAD_DELAY) {
+        showHead = true;
+      }
+      if (showHead && headOffset < HEAD_MAX) {
+        headOffset += HEAD_SPEED;
+      }
+    }
   }
+
   function render(){
-    x.fillStyle = "#1e1e1e"; x.fillRect(0,0,W,H);
-    if(cut === null){ x.drawImage(img, ix, iy, iw, ih); }
-    else {
-      const srcH = img.naturalHeight; const scale = ih / srcH; const realCut = Math.round(cut / scale);
-      x.drawImage(img, 0, realCut, img.naturalWidth, srcH - realCut, ix, iy + cut, iw, ih - cut);
-    }
+    x.fillStyle = "#1e1e1e";
+    x.fillRect(0,0,W,H);
+
     if(cut === null){
-      const step = Math.trunc((spd - base) / 0.5); const idx = clamp(co + step, 0, colors.length - 1);
-      drawLine(Math.round(ly), colors[idx], 2);
+      x.drawImage(img, ix, iy, iw, ih);
+    } else {
+      const srcH = img.naturalHeight;
+      const scale = ih / srcH;
+      const realCut = Math.round(cut / scale);
+
+      if (showHead && hit) {
+        x.drawImage(
+          headImg,
+          ix,
+          iy + cut - headOffset,
+          iw,
+          50
+        );
+      }
+
+      x.drawImage(
+        img,
+        0,
+        realCut,
+        img.naturalWidth,
+        srcH - realCut,
+        ix,
+        iy + cut,
+        iw,
+        ih - cut
+      );
     }
-    drawText(mode.toUpperCase(),10,10,"#fff",16,"left");
-    drawText(`Score: ${score}`, W-10, 10, "#fff", 16, "right");
-    drawText(`Best: ${bestLocal[mode]}`, W-10, 28, "#fff", 16, "right");
-    if(first) drawText("Stiskni mezerník nebo klikni na CASUA", W/2, 10, "#fff", 18, "center");
-    else if(cut !== null) drawText(hit ? "PERFECT!" : "FAIL!", W/2, 10, hit?"#0f0":"#f00", 20, "center");
   }
-  function loop(){ update(); render(); requestAnimationFrame(loop); }
 
   async function triggerSlice(){
     first=false;
     if(cut===null){
-      let r = Math.round(ly - iy); r = clamp(r, 0, ih - 1);
-      if(Math.abs(r - SV) <= TOL){ hit=true; score++; spd += diff[mode].acc; r = SV; }
-      else { hit=false; const wasBetter = score > bestLocal[mode]; saveBestLocal(); if (wasBetter) await saveBestGlobal(); spd = base - diff[mode].acc; }
+      let r = Math.round(ly - iy);
+
+      if(Math.abs(r - SV) <= TOL){
+        hit = true;
+        score++;
+        spd += diff[mode].acc;
+        r = SV;
+
+        lastSliceTime = performance.now();
+        showHead = false;
+        headOffset = 0;
+
+      } else {
+        hit = false;
+        showHead = false;
+        headOffset = 0;
+        spd = base - diff[mode].acc;
+      }
       cut = r;
     } else {
-      cut = null; if(!hit) score = 0; hit=false; ly=iy; dir=1;
+      cut = null;
+      if(!hit) score = 0;
+      hit=false;
+      showHead = false;
+      headOffset = 0;
+      ly=iy;
+      dir=1;
     }
   }
 
-  window.addEventListener("keydown", e=>{ if(e.code==="Space"){ e.preventDefault(); triggerSlice(); } });
-
-  function handle(mx, my){
-    if(mx>=10 && mx<=140 && my>=10 && my<=40){
-      const wasBetter = score > bestLocal[mode]; saveBestLocal(); if (wasBetter) saveBestGlobal().catch(()=>{});
-      mi = (mi+1) % modes.length; mode = modes[mi]; setMode(mode); reset(true); return;
-    }
-    const rightWidth = 180, topHeight = 40;
-    if (mx >= W - rightWidth && mx <= W && my >= 10 && my <= 10 + topHeight) { toggleLeaderboard(); return; }
-    if(mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih){ triggerSlice(); }
+  function loop(){
+    update();
+    render();
+    requestAnimationFrame(loop);
   }
-
-
-  hitbox.addEventListener("pointerdown", e => {
-    e.preventDefault();
-    const r = c.getBoundingClientRect();
-    const scaleX = c.width / r.width;
-    const scaleY = c.height / r.height;
-    const mx = (e.clientX - r.left) * scaleX;
-    const my = (e.clientY - r.top) * scaleY;
-    handle(mx, my);
-  });
-  hitbox.addEventListener("click", e => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, { capture: true });
-  hitbox.addEventListener("pointermove", e => {
-    if (e.pointerType === "touch") return;
-
-    const r = c.getBoundingClientRect();
-    const scaleX = c.width / r.width;
-    const scaleY = c.height / r.height;
-
-    const mx = (e.clientX - r.left) * scaleX;
-    const my = (e.clientY - r.top) * scaleY;
-
-    const overImage =
-      mx >= ix && mx <= ix + iw &&
-      my >= iy && my <= iy + ih;
-
-    hitbox.style.cursor = overImage ? "pointer" : "default";
-  });
-
-  function placeHitbox(){ hitbox.style.left = `${c.offsetLeft}px`; hitbox.style.top = `${c.offsetTop}px`; hitbox.style.width = `${c.offsetWidth}px`; hitbox.style.height = `${c.offsetHeight}px`; }
-  const ro = new ResizeObserver(placeHitbox); ro.observe(c);
-  window.addEventListener('resize', placeHitbox, { passive:true });
-  window.addEventListener('orientationchange', placeHitbox, { passive:true });
-  parent.addEventListener('scroll', placeHitbox, { passive:true });
 
   img.onload = ()=>{
-    const ow = img.naturalWidth, oh = img.naturalHeight, nw = 600, sc = nw / ow, nh = Math.round(oh * sc);
-    iw = nw; ih = nh; ix = Math.floor((W - iw) / 2); iy = 100; SV = Math.floor(ih * 0.334);
-    setMode(mode); reset(true); requestAnimationFrame(loop); placeHitbox();
+    iw = 600;
+    ih = 200;
+    ix = 50;
+    iy = 100;
+    SV = Math.floor(ih * 0.334);
+
+    setMode(mode);
+    reset(true);
+    requestAnimationFrame(loop);
   };
-  img.onerror = ()=>{ x.fillStyle="#1e1e1e"; x.fillRect(0,0,W,H); drawText("Chybí soubor obrazek.png", W/2, H/2-10, "#f88", 18, "center"); placeHitbox(); };
-
-  window.saveScore = async function (difficulty, newScore) {
-    const nick = getNick(); if (!nick) return;
-    if (!["easy","medium","hard"].includes(difficulty)) return;
-    if (typeof newScore !== "number" || !isFinite(newScore)) return;
-    if (newScore > (bestLocal[difficulty] ?? 0)) {
-      bestLocal[difficulty] = newScore; localStorage.setItem(LS, JSON.stringify(bestLocal));
-      try { await sbUpsert({ device_id: DEVICE_ID, nick, difficulty, score: newScore }); } catch(e) { console.error("saveScore failed", e); }
-    }
-  };
-
-  async function ensureAllDifficultiesUpsert(nick) {
-    const localBest = { easy: bestLocal.easy, medium: bestLocal.medium, hard: bestLocal.hard };
-    for (const d of ["easy","medium","hard"]) {
-      const s = localBest[d] ?? 0;
-      await sbUpsert({ device_id: DEVICE_ID, nick, difficulty: d, score: s });
-    }
-  }
-  (async () => { const n = getNick(); if (n) { try { await ensureAllDifficultiesUpsert(n); } catch {} } })();
-
-  const hitboxParent = c.parentElement ?? document.body;
-  hitboxParent.appendChild(hitbox);
 })();
-
-
