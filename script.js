@@ -362,7 +362,9 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
         if (headVisible && head.complete) {
             const hx = ix + Math.floor(iw * 0.67);
             const hy = iy + Math.floor(ih * 0.33);
-           
+
+            const hs = 80; // velikost hlavy
+            
             // Posuv hlavy (0 = dole schovaná)
             const offset = (1 - headSlide) * 40;
 
