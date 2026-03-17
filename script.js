@@ -360,15 +360,23 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
 
         // >>> HEAD FEATURE — vykreslení hlavy s animací vysouvání
         if (headVisible && head.complete) {
-            const hx = ix + Math.floor(iw * 0.70);
+            const hx = ix + Math.floor(iw * 0.67);
             const hy = iy + Math.floor(ih * 0.33);
-            
-            const hs = 100; // velikost hlavy
+           
+            // Posuv hlavy (0 = dole schovaná)
+            const offset = (1 - headSlide) * 40;
 
-            // kolik je hlava vysunutá: 0 = schovaná, 1 = venku
-            const offset = (1 - headSlide) * 40;   // 40 px směrem dolů
+            // Clipping mask — jen nad čárou řezu se ukáže hlava
+            x.save();
+            x.beginPath();
+
+            // maska: místo, kde se má hlava ukázat (horní část vajíčka)
+            x.rect(ix, iy, iw, Math.floor(ih * 0.50));   // uprav podle výšky vajíčka
+            x.clip();
+
             
             x.drawImage(head, hx - hs / 2, hy - hs / 2 + offset, hs, hs);
+            x.restore();
         }
     }
 
