@@ -1,6 +1,6 @@
 (() => {
-    const SUPABASE_URL = "https://wqjfwcsrugopmottwmtl.supabase.co";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey...";
+    const SUPABASE_URL = "https://tvcfaeewwgwkcruwsciq.supabase.co";
+    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Y2ZhZWV3d2d3a2NydXdzY2lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MTA4ODcsImV4cCI6MjA4OTI4Njg4N30.RLiXhRr41IUfSGtTO6z_nNMdtB21ya-LOrhuE0WmvZY";
     async function sbGet(path) {
         const r = await fetch(SUPABASE_URL + path, { headers: { apikey: SUPABASE_ANON, Authorization: "Bearer " + SUPABASE_ANON } });
         let body = null; try { body = await r.json(); } catch (_) { }
@@ -195,7 +195,13 @@
     const c = document.getElementById("game");
     const x = c.getContext("2d");
 
-    const img = new Image();
+    const difficultyImages = {
+        easy: "obrazek_easy.png",
+        medium: "obrazek_medium.png",
+        hard: "obrazek_hard.png"
+    };
+
+    let img = new Image();
     img.src = "obrazek.png";
 
     // >>> HEAD FEATURE — načtení hlavy
@@ -208,7 +214,20 @@
     let headSlide = 0;           // 0 = schovaná, 1 = vysunutá
     let headSliding = false;     // probíhá animace?
 
+    function switchDifficultyImage(m) {
+        const newImg = new Image();
+        newImg.src = difficultyImages[m];
 
+        newImg.onload = () => {
+            // pouze vyměníme obrázek
+            img = newImg;
+            // NIC nepřepočítáváme, aby rychlost zůstala konzistentní
+        };
+
+        newImg.onerror = () => {
+            console.warn("Chybí obrázek pro mód:", m);
+        };
+    } 
 
     (function () {
         const css = `
@@ -441,6 +460,7 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
             mi = (mi + 1) % modes.length;
             mode = modes[mi];
             setMode(mode);
+            switchDifficultyImage(mode);
             reset(true);
             return;
         }
@@ -500,6 +520,7 @@ html, body, canvas, #game, .hitbox { -webkit-tap-highlight-color: rgba(0,0,0,0) 
         SV = Math.floor(ih * 0.334);
         setMode(mode);
         reset(true);
+        switchDifficultyImage("easy");
         requestAnimationFrame(loop);
         placeHitbox();
     };
